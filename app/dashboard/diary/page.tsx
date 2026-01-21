@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,9 +8,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Calendar, Clock } from "lucide-react";
+import { AddPrintDialog } from "./add-print-dialog";
 
 export default async function DiaryPage() {
   const supabase = await createClient();
+
+  // Fetch all needed data in parallel-ish
+  const { data: printers } = await supabase.from("printers").select("*");
+  const { data: filaments } = await supabase.from("filaments").select("*");
+
   // Fetch prints with printers, ordered by newest first
   const { data: prints } = await supabase
     .from("prints")
@@ -37,9 +41,7 @@ export default async function DiaryPage() {
             Deine Sammlung gedruckter Modelle.
           </p>
         </div>
-        <Link href="/dashboard/diary/new">
-          <Button>Neuer Eintrag</Button>
-        </Link>
+        <AddPrintDialog printers={printers || []} filaments={filaments || []} />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

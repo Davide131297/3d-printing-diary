@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "store.bblcdn.eu",
       },
+      {
+        protocol: "https",
+        hostname: "makerworld.bblmw.com",
+      },
     ],
   },
 };

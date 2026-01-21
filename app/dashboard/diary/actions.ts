@@ -2,7 +2,6 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 export async function createPrint(formData: FormData) {
   const supabase = await createClient();
@@ -28,9 +27,6 @@ export async function createPrint(formData: FormData) {
   // Let's rely on standard fields first. We'll handle multiple filaments in a V2 or careful JS.
   // actually, let's use a workaround: The form will likely send 'filament_id' and 'amount'
 
-  const filamentId = formData.get("filament_id") as string;
-  const amountUsed = parseInt(formData.get("amount_used") as string);
-
   // 1. Create Print
   const { data: print, error: printError } = await supabase
     .from("prints")
@@ -52,16 +48,34 @@ export async function createPrint(formData: FormData) {
     return;
   }
 
-  // 2. Link Filament (if provided)
-  if (filamentId && amountUsed && print) {
-    const { error: filError } = await supabase.from("print_filaments").insert({
-      print_id: print.id,
-      filament_id: filamentId,
-      amount_used_g: amountUsed,
-    });
-    if (filError) console.error("Filament link error", filError);
+  // 2. Link Filaments
+  const filamentsJson = formData.get("filaments_json") as string;
+  if (filamentsJson && print) {
+    try {
+      const filaments = JSON.parse(filamentsJson) as {
+        id: string;
+        amount: string;
+      }[];
+
+      const filamentInserts = filaments
+        .filter((f) => f.id && f.amount)
+        .map((f) => ({
+          print_id: print.id,
+          filament_id: f.id,
+          amount_used_g: parseInt(f.amount),
+        }));
+
+      if (filamentInserts.length > 0) {
+        const { error: filError } = await supabase
+          .from("print_filaments")
+          .insert(filamentInserts);
+        if (filError) console.error("Filament link error", filError);
+      }
+    } catch (e) {
+      console.error("Error parsing filaments JSON", e);
+    }
   }
 
   revalidatePath("/dashboard/diary");
-  redirect("/dashboard/diary");
+  revalidatePath("/dashboard/diary");
 }
