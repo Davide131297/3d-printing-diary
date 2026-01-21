@@ -18,7 +18,6 @@ export async function createPrint(formData: FormData) {
   const makerworldLink = formData.get("makerworld_link") as string;
   const printerId = formData.get("printer_id") as string;
   const printTime = parseInt(formData.get("print_time") as string);
-  const notes = formData.get("notes") as string;
 
   // Filament handling is tricky with basic FormData forms if dynamic.
   // For MVP, we will assume one filament or handle it via a separate client-side composition if needed.
@@ -37,7 +36,7 @@ export async function createPrint(formData: FormData) {
       makerworld_link: makerworldLink,
       printer_id: printerId,
       print_time_minutes: printTime,
-      notes,
+
       status: "completed",
     })
     .select()

@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+
 import { createPrint } from "./actions";
 import { scrapeMakerWorld } from "./scrape";
 import Image from "next/image";
@@ -313,15 +313,6 @@ function AddPrintForm({
           placeholder="60"
           value={printTime}
           onChange={(e) => setPrintTime(e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notizen</Label>
-        <Textarea
-          id="notes"
-          name="notes"
-          placeholder="Druckeinstellungen, Probleme, etc."
         />
       </div>
 
