@@ -106,8 +106,11 @@ export default async function DashboardPage() {
                     <CardDescription>{print.model_name}</CardDescription>
                   </CardHeader>
                   <CardFooter>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(print.created_at).toLocaleDateString()}
+                    <span
+                      className="text-xs text-muted-foreground"
+                      suppressHydrationWarning
+                    >
+                      {new Date(print.created_at).toLocaleDateString("de-DE")}
                     </span>
                   </CardFooter>
                 </Card>

@@ -20,9 +20,13 @@ import {
 } from "@/components/ui/popover";
 import { FILAMENT_MANUFACTURERS } from "@/lib/constants";
 
-export function ManufacturerCombobox() {
+export function ManufacturerCombobox({
+  defaultValue,
+}: {
+  defaultValue?: string;
+}) {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("");
+  const [value, setValue] = React.useState(defaultValue || "");
   // We need to track the input search value to allow custom entries
   // However, cmdk hides the direct input value access usually,
   // but we can assume if 'value' is set, that's what we want.

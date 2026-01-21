@@ -1,22 +1,41 @@
 import { createClient } from "@/utils/supabase/server";
-import { DeleteFilamentButton } from "./delete-button";
 import { AddFilamentDialog } from "./add-filament-dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { FilamentList } from "./filament-list";
+import { Filament } from "@/types/diary";
 
 export default async function FilamentsPage() {
   const supabase = await createClient();
-  const { data: filaments } =
-    (await supabase
-      .from("filaments")
-      .select("*")
-      .order("created_at", { ascending: false })) || [];
+  const { data: filamentsData } = (await supabase
+    .from("filaments")
+    .select(
+      `
+      *,
+      print_filaments (
+        amount_used_g
+      )
+    `,
+    )
+    .order("created_at", { ascending: false })) as {
+    data:
+      | (Filament & { print_filaments: { amount_used_g: number }[] })[]
+      | null;
+  };
+
+  const filaments: (Filament & { remaining_g: number })[] = (
+    filamentsData || []
+  ).map((f) => {
+    const used =
+      f.print_filaments?.reduce(
+        (acc: number, curr: { amount_used_g: number }) =>
+          acc + curr.amount_used_g,
+        0,
+      ) || 0;
+    return {
+      ...f,
+      remaining_g: f.weight_g - used,
+    };
+  });
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -41,40 +60,10 @@ export default async function FilamentsPage() {
         <AddFilamentDialog currencySymbol={currencySymbol} />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* List existing filaments */}
-        {filaments?.map((filament) => (
-          <Card key={filament.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full border"
-                      style={{ backgroundColor: filament.color }}
-                    />
-                    {filament.name}
-                  </CardTitle>
-                  <CardDescription>
-                    {filament.manufacturer} - {filament.material}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {filament.price} {filament.currency === "EUR" ? "€" : "$"}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {filament.weight_g}g Rolle
-              </p>
-            </CardContent>
-            <CardFooter className="justify-end">
-              <DeleteFilamentButton id={filament.id} />
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+      <FilamentList
+        filaments={filaments || []}
+        currencySymbol={currencySymbol}
+      />
     </div>
   );
 }

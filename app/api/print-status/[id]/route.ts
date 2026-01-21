@@ -18,8 +18,8 @@ export async function GET(
     // Ideally use Service Role to read encrypted fields if RLS blocks, but user should have access to own data.
     // WARNING: access_code_encrypted should be selectable by user.
     const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!, // Use service key to ensure we can decrypt safely on server only
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!, // Use service key to ensure we can decrypt safely on server only
     );
 
     const { data: printer, error } = await supabase
