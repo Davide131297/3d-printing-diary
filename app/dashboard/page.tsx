@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Printer, Package } from "lucide-react";
+import { LivePrinterStatus } from "@/components/LivePrinterStatus";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -21,7 +22,7 @@ export default async function DashboardPage() {
     await Promise.all([
       supabase
         .from("prints")
-        .select("id, created_at, title, model_name")
+        .select("id, created_at, title, model_name, auto_captured")
         .order("created_at", { ascending: false })
         .limit(5),
       supabase.from("printers").select("id", { count: "exact", head: true }),
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
     ]);
 
   const recentPrints = printsResponse.data || [];
-  const printCount = printsResponse.count; // This might be null if we didn't ask for count, let's explicitly ask for count separately if needed or just use length of all if small.
+  // const printCount = printsResponse.count;
   // Better way for total count:
   const { count: totalPrints } = await supabase
     .from("prints")
@@ -40,6 +41,8 @@ export default async function DashboardPage() {
       <h1 className="text-3xl font-bold tracking-tight">
         Hallo, {user?.email}
       </h1>
+
+      <LivePrinterStatus />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -92,7 +95,14 @@ export default async function DashboardPage() {
               <Link href="/dashboard/diary" key={print.id}>
                 <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
                   <CardHeader>
-                    <CardTitle className="text-base">{print.title}</CardTitle>
+                    <CardTitle className="text-base flex items-center justify-between">
+                      {print.title}
+                      {print.auto_captured && (
+                        <span className="text-[10px] font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-200">
+                          Auto
+                        </span>
+                      )}
+                    </CardTitle>
                     <CardDescription>{print.model_name}</CardDescription>
                   </CardHeader>
                   <CardFooter>

@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { updateProfile } from "./actions";
+import { PrinterConnectForm } from "./PrinterConnectForm";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -41,6 +42,9 @@ export default async function SettingsPage() {
           Verwalte deine Kontoeinstellungen und Präferenzen.
         </p>
       </div>
+
+      {user && <PrinterConnectForm />}
+
       <div className="grid gap-6">
         <Card>
           <CardHeader>
