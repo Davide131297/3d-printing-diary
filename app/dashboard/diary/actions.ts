@@ -1,0 +1,67 @@
+"use server";
+
+import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+export async function createPrint(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return;
+  }
+
+  const title = formData.get("title") as string;
+  const modelName = formData.get("model_name") as string;
+  const makerworldLink = formData.get("makerworld_link") as string;
+  const printerId = formData.get("printer_id") as string;
+  const printTime = parseInt(formData.get("print_time") as string);
+  const notes = formData.get("notes") as string;
+
+  // Filament handling is tricky with basic FormData forms if dynamic.
+  // For MVP, we will assume one filament or handle it via a separate client-side composition if needed.
+  // BUT, to keep it simple, we'll start with just the main print details and maybe ONE filament selection for now
+  // or use a JSON string field if we do a complex form.
+  // Let's rely on standard fields first. We'll handle multiple filaments in a V2 or careful JS.
+  // actually, let's use a workaround: The form will likely send 'filament_id' and 'amount'
+
+  const filamentId = formData.get("filament_id") as string;
+  const amountUsed = parseInt(formData.get("amount_used") as string);
+
+  // 1. Create Print
+  const { data: print, error: printError } = await supabase
+    .from("prints")
+    .insert({
+      user_id: user.id,
+      title,
+      model_name: modelName,
+      makerworld_link: makerworldLink,
+      printer_id: printerId,
+      print_time_minutes: printTime,
+      notes,
+      status: "completed",
+    })
+    .select()
+    .single();
+
+  if (printError) {
+    console.error("Print creation error", printError);
+    return;
+  }
+
+  // 2. Link Filament (if provided)
+  if (filamentId && amountUsed && print) {
+    const { error: filError } = await supabase.from("print_filaments").insert({
+      print_id: print.id,
+      filament_id: filamentId,
+      amount_used_g: amountUsed,
+    });
+    if (filError) console.error("Filament link error", filError);
+  }
+
+  revalidatePath("/dashboard/diary");
+  redirect("/dashboard/diary");
+}
