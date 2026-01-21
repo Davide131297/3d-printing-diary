@@ -42,13 +42,7 @@ export function DashboardNav({ className, ...props }: DashboardNavProps) {
   ];
 
   return (
-    <div
-      className={cn(
-        "pb-12 h-screen border-r border-border bg-sidebar",
-        className,
-      )}
-      {...props}
-    >
+    <div className={cn("pb-12 h-full bg-transparent", className)} {...props}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           <h2 className="mb-2 px-4 text-xl font-semibold tracking-tight text-sidebar-foreground">
