@@ -16,6 +16,7 @@ import { createPrint, updatePrint } from "./actions";
 import { scrapeMakerWorld } from "./scrape";
 import Image from "next/image";
 import { Printer, Filament, Print } from "@/types/diary";
+import { PrintProfile } from "./scrape";
 
 interface PrintFormProps {
   printers: Printer[];
@@ -41,6 +42,10 @@ export function PrintForm({
   const [imageUrl, setImageUrl] = useState(""); // Image URL scraping is only for new ones usually, but could be added
   const [isScraping, setIsScraping] = useState(false);
   const [showScrapePrompt, setShowScrapePrompt] = useState(false);
+  const [availableProfiles, setAvailableProfiles] = useState<PrintProfile[]>(
+    [],
+  );
+  const [selectedProfileName, setSelectedProfileName] = useState("");
 
   // Dynamic Filament List State
   const [selectedFilaments, setSelectedFilaments] = useState<
@@ -73,12 +78,50 @@ export function PrintForm({
         if (data.modelName) setModelName(data.modelName);
         if (data.printTime) setPrintTime(data.printTime.toString());
         if (data.imageUrl) setImageUrl(data.imageUrl);
+
+        if (data.profiles && data.profiles.length > 0) {
+          setAvailableProfiles(data.profiles);
+          // Auto-select first if available
+          // setSelectedProfileName(data.profiles[0].name); // Optional: don't auto-select to let user choose
+        }
         setShowScrapePrompt(false);
       }
     } catch (err) {
       console.error("Failed to scrape", err);
     } finally {
       setIsScraping(false);
+    }
+  };
+
+  const handleProfileSelect = (name: string) => {
+    setSelectedProfileName(name);
+    const profile = availableProfiles.find((p) => p.name === name);
+    if (profile) {
+      if (profile.printTime) {
+        setPrintTime(profile.printTime.toString());
+      }
+      if (profile.filamentWeights && profile.filamentWeights.length > 0) {
+        // Map weights to rows
+        const newRows = profile.filamentWeights.map((fw, i) => {
+          // Try to find a matching filament by color (simple check)
+          // Scraper returns raw color string (e.g. css value). Database usually has hex.
+          // We won't implement complex color matching yet, but we will fix the amount bug.
+          const matchingFilament = filaments.find(
+            (f) =>
+              f.color &&
+              fw.color &&
+              (f.color.toLowerCase() === fw.color.toLowerCase() ||
+                fw.color.includes(f.color)),
+          );
+
+          return {
+            id: matchingFilament ? matchingFilament.id : "",
+            amount: fw.amount.toString(),
+            key: Date.now() + i,
+          };
+        });
+        setSelectedFilaments(newRows);
+      }
     }
   };
 
@@ -152,6 +195,41 @@ export function PrintForm({
         )}
       </div>
 
+      {availableProfiles.length > 0 && (
+        <div className="space-y-2 p-4 border rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+          <Label
+            htmlFor="profile_select"
+            className="text-blue-700 dark:text-blue-300"
+          >
+            Gefundene MakerWorld Profile
+          </Label>
+          <Select
+            value={selectedProfileName}
+            onValueChange={handleProfileSelect}
+          >
+            <SelectTrigger
+              id="profile_select"
+              className="bg-white dark:bg-slate-950"
+            >
+              <SelectValue placeholder="Profil wählen..." />
+            </SelectTrigger>
+            <SelectContent>
+              {availableProfiles.map((p, idx) => (
+                <SelectItem key={idx} value={p.name}>
+                  {p.name}{" "}
+                  {p.printTime
+                    ? `(${Math.round((p.printTime / 60) * 10) / 10} h)`
+                    : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Wähle ein Profil, um die Druckzeit automatisch zu übernehmen.
+          </p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="title">Titel</Label>
         <Input
@@ -181,7 +259,10 @@ export function PrintForm({
         <Label htmlFor="printer_id">Drucker</Label>
         <Select
           name="printer_id"
-          defaultValue={initialData?.printer_id}
+          defaultValue={
+            initialData?.printer_id ||
+            (printers.length === 1 ? printers[0].id : undefined)
+          }
           required
         >
           <SelectTrigger>
