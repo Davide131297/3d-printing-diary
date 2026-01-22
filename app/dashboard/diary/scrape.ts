@@ -20,25 +20,21 @@ export type ScrapedData = {
 // Helper to get browser instance compatible with Vercel and Local
 async function getBrowser() {
   if (process.env.VERCEL) {
-    // Vercel: Use puppeteer-core + @sparticuz/chromium
-    const chromium = await import("@sparticuz/chromium").then(
-      (mod) => mod.default,
-    );
+    const chrome = await import("chrome-aws-lambda").then((mod) => mod.default);
     const puppeteerCore = await import("puppeteer-core").then(
       (mod) => mod.default,
     );
 
     return puppeteerCore.launch({
-      args: chromium.args,
+      args: chrome.args,
       defaultViewport: {
         width: 1920,
         height: 1080,
       },
-      executablePath: await chromium.executablePath(),
-      headless: true,
+      executablePath: await chrome.executablePath,
+      headless: chrome.headless,
     });
   } else {
-    // Local: Use full puppeteer
     const puppeteer = await import("puppeteer").then((mod) => mod.default);
     return puppeteer.launch({
       headless: true,
