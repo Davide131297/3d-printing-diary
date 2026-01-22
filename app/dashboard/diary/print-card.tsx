@@ -110,7 +110,7 @@ export function PrintCard({ print, printers, filaments }: PrintCardProps) {
             {print.print_filaments?.map((pf, i) => (
               <div key={i} className="flex items-center gap-2 mt-1">
                 <div
-                  className="w-3 h-3 rounded-full border"
+                  className="w-3 h-3 rounded-full border border-white"
                   style={{ backgroundColor: pf.filaments?.color }}
                 />
                 <span>
