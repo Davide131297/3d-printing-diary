@@ -15,10 +15,15 @@ import Cookies from "js-cookie";
 import { type BambuStatus } from "@/lib/bambu";
 
 export function LivePrinterStatus() {
+  const [mounted, setMounted] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState<BambuStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchStatus = async () => {
     const ip = Cookies.get("bambu_ip");
@@ -78,7 +83,7 @@ export function LivePrinterStatus() {
 
   const hasCredentials = !!Cookies.get("bambu_ip");
 
-  if (!hasCredentials) return null;
+  if (!mounted || !hasCredentials) return null;
 
   return (
     <Card className="border-blue-100 dark:border-blue-900 overflow-hidden">
