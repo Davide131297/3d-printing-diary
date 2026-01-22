@@ -1,6 +1,7 @@
 import { DashboardNav } from "@/components/dashboard-nav";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 
 export default async function DashboardLayout({
   children,
@@ -24,7 +25,18 @@ export default async function DashboardLayout({
       </aside>
       <div className="flex-1 flex flex-col min-h-screen">
         <header className="md:hidden border-b p-4 flex items-center justify-between sticky top-0 bg-background/50 backdrop-blur-xl z-50">
-          <span className="font-bold tracking-tight">3D Druck Tagebuch</span>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={40}
+              height={40}
+              className="rounded-lg shadow-md border border-border/50"
+            />
+            <span className="font-bold tracking-tight text-lg">
+              3D Druck Tagebuch
+            </span>
+          </div>
           {/* Mobile Menu Trigger could go here */}
         </header>
         <main className="flex-1 p-4 md:p-8 relative">{children}</main>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 import { Book, Printer, Package, Settings, Home } from "lucide-react";
 
@@ -45,9 +46,20 @@ export function DashboardNav({ className, ...props }: DashboardNavProps) {
     <div className={cn("pb-12 h-full bg-transparent", className)} {...props}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-xl font-semibold tracking-tight text-sidebar-foreground">
-            3D Druck Tagebuch
-          </h2>
+          <div className="flex items-center gap-4 px-4 mb-8">
+            <Image
+              src="/logo.png"
+              alt="3D Druck Tagebuch Logo"
+              width={48}
+              height={48}
+              className="rounded-xl shadow-xl border border-border/50"
+            />
+            <h2 className="text-xl font-bold tracking-tight text-sidebar-foreground leading-tight">
+              3D Druck
+              <br />
+              Tagebuch
+            </h2>
+          </div>
           <div className="space-y-1">
             {items.map((item) => (
               <Button
