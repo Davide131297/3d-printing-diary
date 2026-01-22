@@ -118,10 +118,10 @@ export function PrintTable({ prints, printers, filaments }: PrintTableProps) {
                     {print.print_filaments?.map((pf, i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-1 text-[10px] bg-muted px-1.5 py-0.5 rounded-full"
+                        className="flex items-center gap-1 text-[10px] bg-muted px-1.5 py-0.5 rounded-full border border-white/20"
                       >
                         <div
-                          className="w-2 h-2 rounded-full border border-black/10"
+                          className="w-2 h-2 rounded-full border border-white"
                           style={{ backgroundColor: pf.filaments?.color }}
                         />
                         <span>{pf.amount_used_g}g</span>
