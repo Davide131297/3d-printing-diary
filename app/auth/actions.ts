@@ -2,10 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
 import { createClient } from "@/utils/supabase/server";
 
-export async function login(formData: FormData) {
+export async function login(prevState: unknown, formData: FormData) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -17,14 +16,14 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    redirect("/login?error=Could not authenticate user");
+    return { error: "Could not authenticate user" };
   }
 
   revalidatePath("/", "layout");
   redirect("/dashboard");
 }
 
-export async function signup(formData: FormData) {
+export async function signup(prevState: unknown, formData: FormData) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -39,9 +38,9 @@ export async function signup(formData: FormData) {
   });
 
   if (error) {
-    redirect("/login?error=Could not authenticate user");
+    return { error: "Could not authenticate user" };
   }
 
   revalidatePath("/", "layout");
-  redirect("/login?message=Check email to continue sign in process");
+  return { message: "Check email to continue sign in process" };
 }
