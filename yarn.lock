@@ -19,7 +19,7 @@ __metadata:
     "@radix-ui/react-separator": "npm:^1.1.8"
     "@radix-ui/react-slot": "npm:^1.2.4"
     "@radix-ui/react-switch": "npm:^1.2.6"
-    "@sparticuz/chromium-min": "npm:131.0.1"
+    "@sparticuz/chromium": "npm:^143.0.4"
     "@supabase/ssr": "npm:^0.8.0"
     "@supabase/supabase-js": "npm:^2.91.0"
     "@tailwindcss/postcss": "npm:^4"
@@ -1621,13 +1621,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sparticuz/chromium-min@npm:131.0.1":
-  version: 131.0.1
-  resolution: "@sparticuz/chromium-min@npm:131.0.1"
+"@sparticuz/chromium@npm:^143.0.4":
+  version: 143.0.4
+  resolution: "@sparticuz/chromium@npm:143.0.4"
   dependencies:
-    follow-redirects: "npm:^1.15.9"
-    tar-fs: "npm:^3.0.6"
-  checksum: 10c0/ba4a6f8c6740ed7244545b97a31a6e19bf3ca2292f6e7365f0f6b836971daf616e9636d50d4dca9255abae23ebb790fe4c6f2182c833f9549e288d60a6c84bdc
+    follow-redirects: "npm:^1.15.11"
+    tar-fs: "npm:^3.1.1"
+  checksum: 10c0/eab7db834ad4b2f7d07c233a59b1a4dee44e271e15f1747e8e5c5d02515d059f109e5f5f84766d95c067f47aacaed0be3d5b08ee05fa2f7e73d42a2dae0f4f4f
   languageName: node
   linkType: hard
 
@@ -3924,7 +3924,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.15.9":
+"follow-redirects@npm:^1.15.11":
   version: 1.15.11
   resolution: "follow-redirects@npm:1.15.11"
   peerDependenciesMeta:
@@ -6377,7 +6377,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar-fs@npm:^3.0.6, tar-fs@npm:^3.1.1":
+"tar-fs@npm:^3.1.1":
   version: 3.1.1
   resolution: "tar-fs@npm:3.1.1"
   dependencies:
