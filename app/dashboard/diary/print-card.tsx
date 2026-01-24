@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Print, Printer, Filament } from "@/types/diary";
 import { deletePrint } from "./actions";
 import { PrintForm } from "./print-form";
+import Image from "next/image";
 
 interface PrintCardProps {
   print: Print;
@@ -120,12 +121,23 @@ export function PrintCard({ print, printers, filaments }: PrintCardProps) {
             ))}
           </div>
 
+          {print.image_url && (
+            <div className="relative aspect-video w-full overflow-hidden rounded-md border mt-4">
+              <Image
+                src={print.image_url}
+                alt={print.title}
+                fill
+                className="object-cover transition-all hover:scale-105"
+              />
+            </div>
+          )}
+
           {print.makerworld_link && (
             <a
               href={print.makerworld_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-blue-500 hover:underline break-all"
+              className="text-sm text-blue-500 hover:underline break-all mt-2 block"
             >
               MakerWorld Link
             </a>

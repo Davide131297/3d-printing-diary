@@ -27,6 +27,7 @@ export interface Print {
   model_name: string;
   makerworld_link: string;
   printer_id: string;
+  image_url?: string;
   print_time_minutes: number;
   created_at: string;
   printers: Printer;

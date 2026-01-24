@@ -52,6 +52,7 @@ export async function createPrint(formData: FormData) {
   const makerworldLink = formData.get("makerworld_link") as string;
   const printerId = formData.get("printer_id") as string;
   const printTime = parseInt(formData.get("print_time") as string);
+  const imageUrl = formData.get("image_url") as string;
 
   const { data: print, error: printError } = await supabase
     .from("prints")
@@ -62,6 +63,7 @@ export async function createPrint(formData: FormData) {
       makerworld_link: makerworldLink,
       printer_id: printerId,
       print_time_minutes: printTime,
+      image_url: imageUrl,
       status: "completed",
     })
     .select()
@@ -94,6 +96,7 @@ export async function updatePrint(printId: string, formData: FormData) {
   const makerworldLink = formData.get("makerworld_link") as string;
   const printerId = formData.get("printer_id") as string;
   const printTime = parseInt(formData.get("print_time") as string);
+  const imageUrl = formData.get("image_url") as string;
 
   const { error: updateError } = await supabase
     .from("prints")
@@ -102,6 +105,7 @@ export async function updatePrint(printId: string, formData: FormData) {
       model_name: modelName,
       makerworld_link: makerworldLink,
       printer_id: printerId,
+      image_url: imageUrl,
       print_time_minutes: printTime,
     })
     .eq("id", printId)
