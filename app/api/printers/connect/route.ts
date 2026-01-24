@@ -7,6 +7,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { ip, accessCode, serial } = body;
 
+    console.log("Connect Request:", {
+      ip,
+      serial,
+      accessCodeLen: accessCode?.length,
+    });
+
     // 1. Authenticate User
     const supabase = await createClient();
     const {

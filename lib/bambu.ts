@@ -65,10 +65,17 @@ export class BambuClient {
       const options: mqtt.IClientOptions = {
         username: "bblp",
         password: this.config.accessCode,
-        rejectUnauthorized: false, // Bambu printers use self-signed certs
+        rejectUnauthorized: false,
         connectTimeout: 5000,
-        reconnectPeriod: 0, // IMPORTANT: Disable auto-reconnect to prevent background retry loops
+        reconnectPeriod: 0,
+        protocolVersion: 4, // MQTT 3.1.1
+        clientId: `bambu-client-${Math.random().toString(16).substr(2, 8)}`,
+        clean: true,
       };
+
+      console.log(
+        `Connecting to ${this.config.ip} with access code length: ${this.config.accessCode?.length}`,
+      );
 
       this.client = mqtt.connect(url, options);
 
@@ -77,10 +84,22 @@ export class BambuClient {
         resolve();
       });
 
-      this.client.on("error", (err) => {
-        console.error("MQTT Connection Error:", err);
-        reject(err);
-      });
+      this.client.on(
+        "error",
+        (err: Error & { code?: string | number; reasonCode?: number }) => {
+          console.error("MQTT Connection Error Details:", {
+            message: err.message,
+            code: err.code,
+            reasonCode: err.reasonCode,
+            config: {
+              ip: this.config.ip,
+              serial: this.config.serial,
+              accessCodeLen: this.config.accessCode?.length,
+            },
+          });
+          reject(err);
+        },
+      );
     });
   }
 

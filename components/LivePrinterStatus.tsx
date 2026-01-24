@@ -23,7 +23,16 @@ export function LivePrinterStatus() {
 
   useEffect(() => {
     setMounted(true);
+    const savedState = Cookies.get("live_status_active");
+    if (savedState === "true") {
+      setIsActive(true);
+    }
   }, []);
+
+  const handleToggle = (checked: boolean) => {
+    setIsActive(checked);
+    Cookies.set("live_status_active", String(checked), { expires: 1 });
+  };
 
   const fetchStatus = async () => {
     const ip = Cookies.get("bambu_ip");
@@ -35,6 +44,7 @@ export function LivePrinterStatus() {
         "Keine Drucker-Daten gefunden. Bitte in den Einstellungen konfigurieren.",
       );
       setIsActive(false);
+      Cookies.set("live_status_active", "false", { expires: 1 });
       return;
     }
 
@@ -101,7 +111,7 @@ export function LivePrinterStatus() {
           <Switch
             id="live-mode"
             checked={isActive}
-            onCheckedChange={setIsActive}
+            onCheckedChange={handleToggle}
           />
           <Label htmlFor="live-mode" className="text-xs">
             {isActive ? "Aktiv" : "Aus"}
@@ -172,18 +182,27 @@ export function LivePrinterStatus() {
                   AMS Bestückung
                 </p>
                 <div className="flex gap-2">
-                  {status.filaments.map((f, i) => (
-                    <div key={i} className="flex flex-col items-center gap-1">
-                      <div
-                        className="w-4 h-4 rounded-full border shadow-sm"
-                        style={{ backgroundColor: f.color }}
-                        title={f.type}
-                      />
-                      <span className="text-[9px] text-muted-foreground font-medium">
-                        {f.slot + 1}
-                      </span>
-                    </div>
-                  ))}
+                  {status.filaments.map((f, i) => {
+                    const isEmpty = f.type === "Unknown";
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-1">
+                        <div
+                          className="w-4 h-4 rounded-full border shadow-sm border-white"
+                          style={{
+                            background: isEmpty
+                              ? "linear-gradient(45deg, #ffffff calc(50% - 1px), #ef4444 calc(50% - 1px), #ef4444 calc(50% + 1px), #ffffff calc(50% + 1px))"
+                              : f.color.startsWith("#")
+                                ? f.color
+                                : `#${f.color}`,
+                          }}
+                          title={f.type}
+                        />
+                        <span className="text-[9px] text-muted-foreground font-medium">
+                          {f.slot + 1}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

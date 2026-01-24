@@ -44,6 +44,7 @@ export async function GET(
     try {
       await client.connect();
       const status = await client.getPrintStatus();
+      console.log("status: ", status);
       return NextResponse.json(status);
     } finally {
       client.disconnect();

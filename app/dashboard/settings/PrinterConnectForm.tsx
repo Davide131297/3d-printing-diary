@@ -40,6 +40,7 @@ export function PrinterConnectForm() {
     "idle" | "success" | "error"
   >("idle");
   const [statusMessage, setStatusMessage] = useState("");
+  const [isConfigured, setIsConfigured] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,12 +59,17 @@ export function PrinterConnectForm() {
     if (savedIp) form.setValue("ip", savedIp);
     if (savedSerial) form.setValue("serial", savedSerial);
     if (savedAccessCode) form.setValue("accessCode", savedAccessCode);
+
+    if (savedIp && savedSerial && savedAccessCode) {
+      setIsConfigured(true);
+    }
   }, [form]);
 
-  const clearCookies = () => {
+  const handleDisconnect = () => {
     Cookies.remove("bambu_ip");
     Cookies.remove("bambu_serial");
     Cookies.remove("bambu_access_code");
+    Cookies.remove("live_status_active");
 
     form.reset({
       ip: "",
@@ -71,7 +77,11 @@ export function PrinterConnectForm() {
       accessCode: "",
     });
 
-    toast.success("Gespeicherte Daten gelöscht");
+    setIsConfigured(false);
+    setConnectionStatus("idle");
+    setStatusMessage("");
+
+    toast.success("Verbindung getrennt und Daten gelöscht");
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -114,6 +124,8 @@ export function PrinterConnectForm() {
       Cookies.set("bambu_serial", values.serial, { expires: 365 });
       Cookies.set("bambu_access_code", values.accessCode, { expires: 365 });
 
+      setIsConfigured(true);
+
       toast.success("Drucker erfolgreich verbunden!");
     } catch (error: unknown) {
       setConnectionStatus("error");
@@ -149,7 +161,11 @@ export function PrinterConnectForm() {
                   <FormItem>
                     <FormLabel>IP Adresse</FormLabel>
                     <FormControl>
-                      <Input placeholder="192.168.1.x" {...field} />
+                      <Input
+                        placeholder="192.168.1.x"
+                        {...field}
+                        disabled={isConfigured}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -162,7 +178,11 @@ export function PrinterConnectForm() {
                   <FormItem>
                     <FormLabel>Seriennummer</FormLabel>
                     <FormControl>
-                      <Input placeholder="SN..." {...field} />
+                      <Input
+                        placeholder="SN..."
+                        {...field}
+                        disabled={isConfigured}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -181,6 +201,7 @@ export function PrinterConnectForm() {
                       type="password"
                       placeholder="Sicherheits-Code"
                       {...field}
+                      disabled={isConfigured}
                     />
                   </FormControl>
                   <FormDescription>
@@ -236,28 +257,35 @@ export function PrinterConnectForm() {
             )}
 
             <div className="flex gap-2">
-              <Button type="submit" disabled={isConnecting} className="flex-1">
-                {isConnecting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verbinde...
-                  </>
-                ) : (
-                  <>
-                    <Wifi className="mr-2 h-4 w-4" />
-                    Verbinden & Testen
-                  </>
-                )}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={clearCookies}
-                title="Gespeicherte Daten löschen"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {!isConfigured ? (
+                <Button
+                  type="submit"
+                  disabled={isConnecting}
+                  className="flex-1"
+                >
+                  {isConnecting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verbinde...
+                    </>
+                  ) : (
+                    <>
+                      <Wifi className="mr-2 h-4 w-4" />
+                      Verbinden & Testen
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDisconnect}
+                  className="flex-1"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Verbindung beenden
+                </Button>
+              )}
             </div>
           </form>
         </Form>
