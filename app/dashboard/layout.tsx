@@ -1,3 +1,4 @@
+import { MobileNav } from "@/components/mobile-nav";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
@@ -37,7 +38,7 @@ export default async function DashboardLayout({
               3D Druck Tagebuch
             </span>
           </div>
-          {/* Mobile Menu Trigger could go here */}
+          <MobileNav />
         </header>
         <main className="flex-1 p-4 md:p-8 relative">{children}</main>
       </div>

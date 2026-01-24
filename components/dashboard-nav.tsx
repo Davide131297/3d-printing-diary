@@ -9,9 +9,15 @@ import Image from "next/image";
 
 import { Book, Printer, Package, Settings, Home } from "lucide-react";
 
-type DashboardNavProps = React.HTMLAttributes<HTMLDivElement>;
+interface DashboardNavProps extends React.HTMLAttributes<HTMLDivElement> {
+  onNavClick?: () => void;
+}
 
-export function DashboardNav({ className, ...props }: DashboardNavProps) {
+export function DashboardNav({
+  className,
+  onNavClick,
+  ...props
+}: DashboardNavProps) {
   const pathname = usePathname();
 
   const items = [
@@ -73,7 +79,7 @@ export function DashboardNav({ className, ...props }: DashboardNavProps) {
                 )}
                 asChild
               >
-                <Link href={item.href}>
+                <Link href={item.href} onClick={onNavClick}>
                   <item.icon className="mr-2 h-4 w-4" />
                   {item.title}
                 </Link>

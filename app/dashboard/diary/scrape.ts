@@ -20,19 +20,25 @@ export type ScrapedData = {
 // Helper to get browser instance compatible with Vercel and Local
 async function getBrowser() {
   if (process.env.VERCEL) {
-    const chrome = await import("chrome-aws-lambda").then((mod) => mod.default);
+    const chromium = await import("@sparticuz/chromium").then(
+      (mod) => mod.default,
+    );
+
     const puppeteerCore = await import("puppeteer-core").then(
       (mod) => mod.default,
     );
 
+    // Optional: Load specific font if needed, otherwise default is fine
+    // await chromium.font('...');
+
     return puppeteerCore.launch({
-      args: chrome.args,
+      args: chromium.args,
       defaultViewport: {
         width: 1920,
         height: 1080,
       },
-      executablePath: await chrome.executablePath,
-      headless: chrome.headless,
+      executablePath: await chromium.executablePath(),
+      headless: true,
     });
   } else {
     const puppeteer = await import("puppeteer").then((mod) => mod.default);
@@ -58,7 +64,8 @@ export async function scrapeMakerWorld(
     return null;
   }
 
-  let browser = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let browser: any = null;
 
   try {
     browser = await getBrowser();
@@ -138,7 +145,8 @@ export async function scrapeMakerWorld(
       try {
         // Get name
         const name = await titleHandle.evaluate(
-          (el) => el.textContent?.trim() || "",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (el: any) => el.textContent?.trim() || "",
         );
 
         // Get parent container for time
@@ -173,43 +181,48 @@ export async function scrapeMakerWorld(
           // Improved extraction logic specifically looking for .mw-css-sbssk2 elements
           // which contain both color (bg style or text) and weight
           // Enhanced filament extraction with RGB to Hex conversion
-          const filaments = await popover.evaluate((el) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const filaments = await popover.evaluate((el: any) => {
             const filamentRows = Array.from(
               el.querySelectorAll(".mw-css-sbssk2"),
             );
-            return filamentRows
-              .map((row) => {
-                const weightText =
-                  row.querySelector(".mw-css-1qxtz39")?.textContent || "";
-                const weightMatch = weightText.match(/(\d+(?:\.\d+)?)\s*g/);
-                const amount = weightMatch ? parseFloat(weightMatch[1]) : 0;
+            return (
+              filamentRows
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .map((row: any) => {
+                  const weightText =
+                    row.querySelector(".mw-css-1qxtz39")?.textContent || "";
+                  const weightMatch = weightText.match(/(\d+(?:\.\d+)?)\s*g/);
+                  const amount = weightMatch ? parseFloat(weightMatch[1]) : 0;
 
-                // Color extraction from style attribute (background: ...)
-                const style = row.getAttribute("style") || "";
-                let color = "";
-                const bgMatch = style.match(/background:\s*([^;]+)/);
-                if (bgMatch) {
-                  color = bgMatch[1].trim();
-                  // Basic RGB parser to convert "rgb(r, g, b)" to "#RRGGBB"
-                  if (color.startsWith("rgb")) {
-                    const rgb = color.match(/\d+/g);
-                    if (rgb && rgb.length >= 3) {
-                      const r = parseInt(rgb[0]);
-                      const g = parseInt(rgb[1]);
-                      const b = parseInt(rgb[2]);
-                      color =
-                        "#" +
-                        ((1 << 24) + (r << 16) + (g << 8) + b)
-                          .toString(16)
-                          .slice(1)
-                          .toUpperCase();
+                  // Color extraction from style attribute (background: ...)
+                  const style = row.getAttribute("style") || "";
+                  let color = "";
+                  const bgMatch = style.match(/background:\s*([^;]+)/);
+                  if (bgMatch) {
+                    color = bgMatch[1].trim();
+                    // Basic RGB parser to convert "rgb(r, g, b)" to "#RRGGBB"
+                    if (color.startsWith("rgb")) {
+                      const rgb = color.match(/\d+/g);
+                      if (rgb && rgb.length >= 3) {
+                        const r = parseInt(rgb[0]);
+                        const g = parseInt(rgb[1]);
+                        const b = parseInt(rgb[2]);
+                        color =
+                          "#" +
+                          ((1 << 24) + (r << 16) + (g << 8) + b)
+                            .toString(16)
+                            .slice(1)
+                            .toUpperCase();
+                      }
                     }
                   }
-                }
 
-                return { amount, color };
-              })
-              .filter((f) => f.amount > 0);
+                  return { amount, color };
+                })
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .filter((f: any) => f.amount > 0)
+            );
           });
 
           filamentWeights = filaments;
@@ -218,7 +231,8 @@ export async function scrapeMakerWorld(
         // Get time (we have to do this via puppeteer too since we are iterating handles)
         // Find the time element in the same card.
         // We assume the card containing this title is roughly the parent.
-        const timeVal = await titleHandle.evaluate((el: Element) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const timeVal = await titleHandle.evaluate((el: any) => {
           // Traverse up to find a container
           const container =
             el.closest(".mw-css-1age63q") ||
