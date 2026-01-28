@@ -85,6 +85,39 @@ export async function scrapeMakerWorld(
     // Slight delay to ensure hydration
     await new Promise((r) => setTimeout(r, 2000));
 
+    // Expand "Load More" for profiles if it exists (German & English support)
+    try {
+      const wasClicked = await page.evaluate(() => {
+        const textToFind = [
+          "Klicken Sie hier, um mehr zu sehen",
+          "Click here to view more",
+        ];
+        // Use document.evaluate to find the element
+        const xpath = `//span[${textToFind.map((t) => `contains(text(), '${t}')`).join(" or ")}]`;
+        const result = document.evaluate(
+          xpath,
+          document,
+          null,
+          XPathResult.FIRST_ORDERED_NODE_TYPE,
+          null,
+        );
+        const node = result.singleNodeValue;
+        if (node && node instanceof HTMLElement) {
+          node.click();
+          return true;
+        }
+        return false;
+      });
+
+      if (wasClicked) {
+        console.log("Found expand profiles button, clicking...");
+        // Wait for new profiles to load
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+    } catch (e) {
+      console.warn("Error attempting to expand profiles:", e);
+    }
+
     // Get the HTML for static parsing (Image, Title, Initial Time)
     const html = await page.content();
     const $ = cheerio.load(html);
