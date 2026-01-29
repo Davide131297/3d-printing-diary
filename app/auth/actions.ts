@@ -44,3 +44,10 @@ export async function signup(prevState: unknown, formData: FormData) {
   revalidatePath("/", "layout");
   return { message: "Check email to continue sign in process" };
 }
+
+export async function signout() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  revalidatePath("/", "layout");
+  redirect("/?logged_out=true");
+}

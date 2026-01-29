@@ -1,9 +1,16 @@
 import LoginModal from "@/components/auth/login-modal";
 import { Printer, Box, Layers, Activity } from "lucide-react";
+import { LogoutAlert } from "@/components/logout-alert";
 
-export default function Home() {
+export default async function Home(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const isLoggedOut = searchParams.logged_out === "true";
+
   return (
     <div className="flex flex-col min-h-screen font-sans">
+      {isLoggedOut && <LogoutAlert />}
       {/* Decorative Grid Lines - subtle overlay */}
       <div
         className="absolute inset-0 pointer-events-none overflow-hidden select-none opacity-20"

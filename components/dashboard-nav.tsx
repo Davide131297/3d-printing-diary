@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
-import { Book, Printer, Package, Settings, Home } from "lucide-react";
+import { Book, Printer, Package, Settings, Home, LogOut } from "lucide-react";
+import { signout } from "@/app/auth/actions";
 
 interface DashboardNavProps extends React.HTMLAttributes<HTMLDivElement> {
   onNavClick?: () => void;
@@ -85,6 +86,16 @@ export function DashboardNav({
                 </Link>
               </Button>
             ))}
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-500/10 mt-8"
+              onClick={async () => {
+                await signout();
+              }}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Abmelden
+            </Button>
           </div>
         </div>
       </div>
