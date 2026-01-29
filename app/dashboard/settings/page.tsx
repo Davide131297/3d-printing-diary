@@ -75,6 +75,24 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Daten Exportieren</CardTitle>
+            <CardDescription>
+              Exportiere deine Druck-Historie als CSV-Datei.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <a href="/api/export" download="diary_export.csv">
+                Als CSV exportieren
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
