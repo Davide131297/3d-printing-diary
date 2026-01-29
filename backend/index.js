@@ -7,19 +7,18 @@ const port = 3001;
 
 app.use(
   cors({
-    origin: [
-      "https://3d-printing-diary-v2-git-external-api-davide131297s-projects.vercel.app",
-      "https://3d-printing-diary-v2.vercel.app",
-      "https://3d-printing-diary-v2-git-external-api-davide131297s-projects.vercel.app/dashboard/diary",
-      "http://localhost:3000",
-      "https://computers-phi-negotiation-ron.trycloudflare.com", // Dein Tunnel!
-    ],
+    origin: "*", // Temporär: Alle erlauben
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("MakerWorld Scraper API is running!");
+  res.json({
+    message: "3D-Printing Backend läuft!",
+    tunnel: "https://computers-phi-negotiation-ron.trycloudflare.com",
+  });
 });
 
 app.post("/scrape", async (req, res) => {
