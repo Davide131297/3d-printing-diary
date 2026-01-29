@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo.png",
   },
+  authors: [{ name: "Davide Chiffi" }],
 };
 
 export default function RootLayout({

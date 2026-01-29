@@ -97,6 +97,11 @@ export function DashboardNav({
               Abmelden
             </Button>
           </div>
+          <div className="mt-8 px-4 text-xs text-muted-foreground/50 flex gap-2">
+            <p>Version 1.0</p>
+            <p>•</p>
+            <p>{new Date().toLocaleDateString("de-DE")}</p>
+          </div>
         </div>
       </div>
     </div>
