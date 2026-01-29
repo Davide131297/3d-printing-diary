@@ -5,7 +5,17 @@ const { scrapeMakerWorld } = require("./scraper");
 const app = express();
 const port = 3001;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://3d-printing-diary-v2-git-external-api-davide131297s-projects.vercel.app",
+      "https://3d-printing-diary-v2.vercel.app",
+      "https://3d-printing-diary-v2-git-external-api-davide131297s-projects.vercel.app/dashboard/diary",
+      "http://localhost:3000",
+      "https://computers-phi-negotiation-ron.trycloudflare.com", // Dein Tunnel!
+    ],
+  }),
+);
 app.use(express.json());
 
 app.get("/", (req, res) => {
