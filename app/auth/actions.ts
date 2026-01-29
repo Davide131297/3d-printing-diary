@@ -42,7 +42,7 @@ export async function signup(prevState: unknown, formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  return { message: "Check email to continue sign in process" };
+  return { message: "Erfolgreich registriert, du kannst dich jetzt einloggen" };
 }
 
 export async function signout() {
