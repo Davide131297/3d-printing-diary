@@ -1,0 +1,47 @@
+name: Deploy Backend to Raspberry Pi
+
+on:
+  push:
+    branches: [external-api]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    env:
+      DEPLOY_DIR: ~/deployments/3d-printing-backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Assumes Node.js and Yarn are already installed on the Raspberry Pi
+      - name: Check Node.js version
+        run: node -v
+
+      - name: Create deployment directory
+        run: |
+          mkdir -p ${{ env.DEPLOY_DIR }}
+          mkdir -p ~/logs
+
+      - name: Copy backend files
+        run: |
+          # Sync backend folder content to deployment directory
+          # Using rsync to copy only backend files
+          rsync -av --delete \
+            --exclude 'node_modules' \
+            --exclude '.env' \
+            ./backend/ ${{ env.DEPLOY_DIR }}/
+
+      - name: Install dependencies
+        run: |
+          cd ${{ env.DEPLOY_DIR }}
+          npm ci --production
+
+      - name: Restart application with PM2
+        run: |
+          cd ${{ env.DEPLOY_DIR }}
+          # Start or restart the application
+          # If 'backend' process exists, it restarts; otherwise it starts new
+          pm2 describe backend > /dev/null && pm2 restart backend || pm2 start index.js --name "backend"
+          pm2 save

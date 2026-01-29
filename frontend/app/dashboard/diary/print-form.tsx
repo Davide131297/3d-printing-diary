@@ -13,7 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createPrint, updatePrint } from "./actions";
-import { scrapeMakerWorld } from "./scrape";
 import Image from "next/image";
 import { Printer, Filament, Print } from "@/types/diary";
 import { PrintProfile } from "./scrape";
@@ -72,22 +71,31 @@ export function PrintForm({
   const handleScrape = async () => {
     setIsScraping(true);
     try {
-      const data = await scrapeMakerWorld(makerworldLink);
-      if (data) {
-        if (data.title) setTitle(data.title);
-        if (data.modelName) setModelName(data.modelName);
-        if (data.printTime) setPrintTime(data.printTime.toString());
-        if (data.imageUrl) setImageUrl(data.imageUrl);
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const res = await fetch(`${backendUrl}/scrape`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: makerworldLink }),
+      });
 
-        if (data.profiles && data.profiles.length > 0) {
-          setAvailableProfiles(data.profiles);
-          // Auto-select first if available
-          // setSelectedProfileName(data.profiles[0].name); // Optional: don't auto-select to let user choose
+      if (res.ok) {
+        const data = await res.json();
+        if (data) {
+          if (data.title) setTitle(data.title);
+          if (data.modelName) setModelName(data.modelName);
+          if (data.printTime) setPrintTime(data.printTime.toString());
+          if (data.imageUrl) setImageUrl(data.imageUrl);
+
+          if (data.profiles && data.profiles.length > 0) {
+            setAvailableProfiles(data.profiles);
+          }
+          setShowScrapePrompt(false);
         }
-        setShowScrapePrompt(false);
       }
-    } catch (err) {
-      console.error("Failed to scrape", err);
+    } catch (error) {
+      console.error("Error scraping MakerWorld:", error);
     } finally {
       setIsScraping(false);
     }
