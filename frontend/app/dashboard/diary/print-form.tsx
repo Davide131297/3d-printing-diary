@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { createPrint, updatePrint } from "./actions";
 import Image from "next/image";
 import { Printer, Filament, Print } from "@/types/diary";
 import { PrintProfile } from "./scrape";
+import { cn } from "@/lib/utils";
 
 interface PrintFormProps {
   printers: Printer[];
@@ -41,6 +43,7 @@ export function PrintForm({
   const [imageUrl, setImageUrl] = useState(""); // Image URL scraping is only for new ones usually, but could be added
   const [isScraping, setIsScraping] = useState(false);
   const [showScrapePrompt, setShowScrapePrompt] = useState(false);
+  const [scrapeError, setScrapeError] = useState(false);
   const [availableProfiles, setAvailableProfiles] = useState<PrintProfile[]>(
     [],
   );
@@ -63,13 +66,16 @@ export function PrintForm({
     setMakerworldLink(url);
     if (url.includes("makerworld.com") && url.length > 20) {
       setShowScrapePrompt(true);
+      setScrapeError(false);
     } else {
       setShowScrapePrompt(false);
+      setScrapeError(false);
     }
   };
 
   const handleScrape = async () => {
     setIsScraping(true);
+    setScrapeError(false);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
       const headers: Record<string, string> = {
@@ -102,9 +108,12 @@ export function PrintForm({
           }
           setShowScrapePrompt(false);
         }
+      } else {
+        setScrapeError(true);
       }
     } catch (error) {
       console.error("Error scraping MakerWorld:", error);
+      setScrapeError(true);
     } finally {
       setIsScraping(false);
     }
@@ -193,16 +202,37 @@ export function PrintForm({
         </div>
         {showScrapePrompt && (
           <div className="flex items-center gap-4 bg-blue-50 dark:bg-blue-950/30 p-2 rounded text-sm text-blue-600 dark:text-blue-400 animate-in fade-in slide-in-from-top-1">
-            <span>Modell gefunden! Daten übernehmen?</span>
+            <span>Daten übernehmen?</span>
             <Button
               type="button"
               size="sm"
               onClick={handleScrape}
-              disabled={isScraping}
+              disabled={isScraping || scrapeError}
+              className={cn(
+                isScraping || scrapeError
+                  ? "cursor-not-allowed"
+                  : "cursor-pointer",
+              )}
             >
-              {isScraping ? "Lade..." : "Ja, abrufen"}
+              {isScraping ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Daten werden abgerufen...
+                </>
+              ) : (
+                "Ja, abrufen"
+              )}
             </Button>
           </div>
+        )}
+        {scrapeError && (
+          <Alert variant="destructive" className="mt-2">
+            <AlertTitle>Fehler</AlertTitle>
+            <AlertDescription>
+              Die Funktion ist aktuell deaktiviert. Bitte versuche es später
+              noch einmal.
+            </AlertDescription>
+          </Alert>
         )}
         {imageUrl && (
           <div className="relative mx-auto mt-2 aspect-square w-full max-w-[300px] rounded-md overflow-hidden bg-muted">
