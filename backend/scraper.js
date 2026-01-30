@@ -1,9 +1,10 @@
 const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
+const fs = require("fs");
 
 // Helper to get browser instance
 async function getBrowser() {
-  return puppeteer.launch({
+  const launchOptions = {
     headless: true,
     args: [
       "--no-sandbox",
@@ -12,7 +13,26 @@ async function getBrowser() {
       "--disable-accelerated-2d-canvas",
       "--disable-gpu",
     ],
-  });
+  };
+
+  // Helper to find system browser on Linux (especially for Raspberry Pi ARM)
+  if (process.platform === "linux") {
+    const possiblePaths = [
+      "/usr/bin/chromium-browser",
+      "/usr/bin/chromium",
+      "/usr/bin/google-chrome-stable",
+    ];
+
+    for (const path of possiblePaths) {
+      if (fs.existsSync(path)) {
+        console.log(`Using system browser at: ${path}`);
+        launchOptions.executablePath = path;
+        break;
+      }
+    }
+  }
+
+  return puppeteer.launch(launchOptions);
 }
 
 // Scrape function
