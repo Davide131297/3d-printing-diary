@@ -9,7 +9,11 @@ app.use(
   cors({
     origin: "*", // Temporär: Alle erlauben
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "ngrok-skip-browser-warning",
+    ],
   }),
 );
 app.use(express.json());
