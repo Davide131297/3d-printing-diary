@@ -58,4 +58,5 @@ jobs:
           # Start or restart the application
           # If '3d-printing-backend' process exists, it restarts; otherwise it starts new
           pm2 describe 3d-printing-backend > /dev/null && pm2 restart 3d-printing-backend || pm2 start index.js --name "3d-printing-backend"
+          pm2 describe ngrok-tunnel > /dev/null && pm2 restart ngrok-tunnel
           pm2 save

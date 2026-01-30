@@ -21,7 +21,6 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.json({
     message: "3D-Printing Backend läuft!",
-    tunnel: "https://computers-phi-negotiation-ron.trycloudflare.com",
   });
 });
 
