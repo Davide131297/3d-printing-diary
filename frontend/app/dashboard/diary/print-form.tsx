@@ -80,6 +80,9 @@ export function PrintForm({
         headers["ngrok-skip-browser-warning"] = "true";
       }
 
+      headers["Authorization"] =
+        `Bearer ${process.env.NEXT_PUBLIC_BACKEND_TOKEN}`;
+
       const res = await fetch(`${backendUrl}/scrape`, {
         method: "POST",
         headers,

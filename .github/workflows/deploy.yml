@@ -33,6 +33,10 @@ jobs:
             --exclude '.env' \
             ./backend/ ${{ env.DEPLOY_DIR }}/
 
+      - name: Create .env file
+        run: |
+          echo "BACKEND_TOKEN=${{ secrets.BACKEND_TOKEN }}" > ${{ env.DEPLOY_DIR }}/.env
+
       - name: Install dependencies
         env:
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"

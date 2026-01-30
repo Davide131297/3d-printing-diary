@@ -1,6 +1,6 @@
-const puppeteer = require("puppeteer");
-const cheerio = require("cheerio");
-const fs = require("fs");
+import puppeteer from "puppeteer";
+import * as cheerio from "cheerio";
+import fs from "fs";
 
 // Helper to get browser instance
 async function getBrowser() {
@@ -36,7 +36,7 @@ async function getBrowser() {
 }
 
 // Scrape function
-async function scrapeMakerWorld(url) {
+export async function scrapeMakerWorld(url) {
   if (!url.includes("makerworld.com")) {
     return null;
   }
@@ -273,5 +273,3 @@ async function scrapeMakerWorld(url) {
     }
   }
 }
-
-module.exports = { scrapeMakerWorld };
