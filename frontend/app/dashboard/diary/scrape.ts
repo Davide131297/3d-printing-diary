@@ -110,7 +110,6 @@ export async function scrapeMakerWorld(
       });
 
       if (wasClicked) {
-        console.log("Found expand profiles button, clicking...");
         // Wait for new profiles to load
         await new Promise((r) => setTimeout(r, 2000));
       }
