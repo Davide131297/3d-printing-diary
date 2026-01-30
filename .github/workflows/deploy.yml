@@ -2,7 +2,7 @@ name: Deploy Backend to Raspberry Pi
 
 on:
   push:
-    branches: [external-api]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
