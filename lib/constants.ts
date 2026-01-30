@@ -46,4 +46,5 @@ export const FILAMENT_MANUFACTURERS = [
   "Fillamentum",
   "Proto-pasta",
   "SainSmart",
+  "Jayo",
 ].sort();
