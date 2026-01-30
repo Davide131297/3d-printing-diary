@@ -72,11 +72,17 @@ export function PrintForm({
     setIsScraping(true);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (backendUrl && !backendUrl.includes("localhost")) {
+        headers["ngrok-skip-browser-warning"] = "true";
+      }
+
       const res = await fetch(`${backendUrl}/scrape`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({ url: makerworldLink }),
       });
 

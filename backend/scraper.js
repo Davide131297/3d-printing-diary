@@ -47,6 +47,19 @@ async function scrapeMakerWorld(url) {
     browser = await getBrowser();
     const page = await browser.newPage();
 
+    // Block unnecessary resources to speed up loading
+    await page.setRequestInterception(true);
+    page.on("request", (req) => {
+      const resourceType = req.resourceType();
+      if (
+        ["image", "stylesheet", "font", "media", "other"].includes(resourceType)
+      ) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
     // Set a consistent User-Agent
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -55,11 +68,12 @@ async function scrapeMakerWorld(url) {
     // Make window appear normal size
     await page.setViewport({ width: 1920, height: 1080 });
 
-    // Go to the URL and wait for network to be idle
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+    // Go to the URL
+    // networkidle2 is often better for SPAs than domcontentloaded + fixed sleep
+    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
 
-    // Slight delay to ensure hydration
-    await new Promise((r) => setTimeout(r, 2000));
+    // Reduced delay as we wait for network idle now
+    // await new Promise((r) => setTimeout(r, 1000));
 
     // Expand "Load More" for profiles if it exists (German & English support)
     try {
@@ -88,7 +102,8 @@ async function scrapeMakerWorld(url) {
       });
 
       if (wasClicked) {
-        await new Promise((r) => setTimeout(r, 2000));
+        // Wait briefly for new content
+        await new Promise((r) => setTimeout(r, 1000));
       }
     } catch (e) {
       console.warn("Error attempting to expand profiles:", e);
