@@ -3,6 +3,8 @@ name: Deploy Backend to Raspberry Pi
 on:
   push:
     branches: [main]
+    paths:
+      - "backend/**"
   workflow_dispatch:
 
 jobs:
