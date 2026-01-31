@@ -18,7 +18,14 @@ async function linkFilaments(
     }[];
 
     // First delete existing links for update
-    await supabase.from("print_filaments").delete().eq("print_id", printId);
+    const { error: delError } = await supabase
+      .from("print_filaments")
+      .delete()
+      .eq("print_id", printId);
+
+    if (delError) {
+      console.error("Error deleting old filaments:", delError);
+    }
 
     const filamentInserts = filaments
       .filter((f) => f.id && f.amount)
