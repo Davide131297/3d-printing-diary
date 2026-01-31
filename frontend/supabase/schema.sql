@@ -4,6 +4,7 @@ create table public.profiles (
   updated_at timestamp with time zone,
   username text unique,
   currency text default 'EUR' check (currency in ('EUR', 'USD')),
+  price_ct_kwh numeric default null,
   
   constraint username_length check (char_length(username) >= 3)
 );
@@ -85,6 +86,7 @@ create table public.prints (
   makerworld_link text,
   
   print_time_minutes integer,
+  power_consumption_w integer, -- Power consumption in Watts
   status text default 'completed', -- 'completed', 'failed', 'printing'
   
   notes text,

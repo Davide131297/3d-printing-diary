@@ -11,9 +11,15 @@ interface PrintListProps {
   prints: Print[];
   printers: Printer[];
   filaments: Filament[];
+  electricityPrice: number | null;
 }
 
-export function PrintList({ prints, printers, filaments }: PrintListProps) {
+export function PrintList({
+  prints,
+  printers,
+  filaments,
+  electricityPrice,
+}: PrintListProps) {
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
 
   return (
@@ -40,7 +46,12 @@ export function PrintList({ prints, printers, filaments }: PrintListProps) {
       </div>
 
       {viewMode === "table" ? (
-        <PrintTable prints={prints} printers={printers} filaments={filaments} />
+        <PrintTable
+          prints={prints}
+          printers={printers}
+          filaments={filaments}
+          electricityPrice={electricityPrice}
+        />
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {prints.map((print) => (
@@ -49,6 +60,7 @@ export function PrintList({ prints, printers, filaments }: PrintListProps) {
               print={print}
               printers={printers}
               filaments={filaments}
+              electricityPrice={electricityPrice}
             />
           ))}
           {prints.length === 0 && (

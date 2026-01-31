@@ -33,9 +33,15 @@ interface PrintCardProps {
   print: Print;
   printers: Printer[];
   filaments: Filament[];
+  electricityPrice: number | null;
 }
 
-export function PrintCard({ print, printers, filaments }: PrintCardProps) {
+export function PrintCard({
+  print,
+  printers,
+  filaments,
+  electricityPrice,
+}: PrintCardProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -52,6 +58,13 @@ export function PrintCard({ print, printers, filaments }: PrintCardProps) {
         currency = fil.currency;
       }
     });
+  }
+
+  // Calculate Electricity Cost
+  if (print.power_consumption_w && electricityPrice) {
+    const kwh = print.power_consumption_w / 1000;
+    const electricityCost = kwh * (electricityPrice / 100); // price is in ct/kWh, convert to currency unit (Euro/Dollar)
+    totalCost += electricityCost;
   }
 
   const handleDelete = async () => {
@@ -102,6 +115,16 @@ export function PrintCard({ print, printers, filaments }: PrintCardProps) {
               <Clock className="w-4 h-4" />
               {print.print_time_minutes} min
             </span>
+            {print.power_consumption_w && electricityPrice && (
+              <span className="flex items-center gap-1 text-xs bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded-full border border-yellow-500/20">
+                ⚡{" "}
+                {(
+                  (print.power_consumption_w / 1000) *
+                  (electricityPrice / 100)
+                ).toFixed(2)}{" "}
+                {currency === "EUR" ? "€" : "$"}
+              </span>
+            )}
           </div>
 
           <div className="text-sm bg-muted/50 p-2 rounded">

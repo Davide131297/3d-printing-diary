@@ -42,6 +42,14 @@ export async function GET() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })) as { data: Print[] | null };
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("price_ct_kwh")
+    .eq("id", user.id)
+    .single();
+
+  const electricityPrice = profile?.price_ct_kwh || null;
+
   if (!prints || prints.length === 0) {
     return new NextResponse("No data found", { status: 404 });
   }
@@ -58,6 +66,8 @@ export async function GET() {
     "Cost",
     "Currency",
     "Print Time (min)",
+    "Electricity (Wh)",
+    "Electricity Cost",
   ];
 
   // Transform data to CSV rows
@@ -72,7 +82,15 @@ export async function GET() {
     // Given the request is "export as CSV", usually flattened data is better.
     // If there are no filaments, we still want a row.
 
+    const powerConsumption = print.power_consumption_w || 0;
+    let electricityCostValue = 0;
+    if (powerConsumption && electricityPrice) {
+      electricityCostValue =
+        (powerConsumption / 1000) * (electricityPrice / 100);
+    }
+
     if (!print.print_filaments || print.print_filaments.length === 0) {
+      // If no filament usage, we still export the print with electricity cost if applicable
       return [
         {
           date: date,
@@ -82,14 +100,16 @@ export async function GET() {
           manufacturer: "",
           color: "",
           amount: 0,
-          cost: "0.00", // Changed to string to match toFixed(2) output
+          cost: "0.00",
           currency: "",
           printTime: print.print_time_minutes || 0,
+          electricityWh: powerConsumption,
+          electricityCost: electricityCostValue.toFixed(2),
         },
       ];
     }
 
-    return print.print_filaments.map((pf) => {
+    return print.print_filaments.map((pf, index) => {
       const fil = pf.filaments;
       let cost = 0;
       let currency = "";
@@ -107,6 +127,13 @@ export async function GET() {
         }
       }
 
+      // We only want to add the electricity cost ONCE per print, typically on the first line item
+      // if there are multiple filaments used. Or we could split it?
+      // Simplest is to put it on the first row of the print.
+      const currentElectricityCost =
+        index === 0 ? electricityCostValue.toFixed(2) : "0.00";
+      const currentElectricityWh = index === 0 ? powerConsumption : 0;
+
       return {
         date: date,
         modelName: print.title || "Untitled",
@@ -118,6 +145,8 @@ export async function GET() {
         cost: cost.toFixed(2),
         currency: currency,
         printTime: print.print_time_minutes || 0,
+        electricityWh: currentElectricityWh,
+        electricityCost: currentElectricityCost,
       };
     });
   });
@@ -137,6 +166,8 @@ export async function GET() {
         escapeCsv(row.cost),
         escapeCsv(row.currency),
         escapeCsv(row.printTime),
+        escapeCsv(row.electricityWh),
+        escapeCsv(row.electricityCost),
       ].join(","),
     ),
   ].join("\n");

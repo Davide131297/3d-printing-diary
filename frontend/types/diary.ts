@@ -29,6 +29,7 @@ export interface Print {
   printer_id: string;
   image_url?: string;
   print_time_minutes: number;
+  power_consumption_w?: number;
   created_at: string;
   printers: Printer;
   print_filaments: PrintFilament[];

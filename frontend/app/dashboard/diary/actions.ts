@@ -59,6 +59,10 @@ export async function createPrint(formData: FormData) {
   const makerworldLink = formData.get("makerworld_link") as string;
   const printerId = formData.get("printer_id") as string;
   const printTime = parseInt(formData.get("print_time") as string);
+
+  const powerConsumption = formData.get("power_consumption_w")
+    ? parseInt(formData.get("power_consumption_w") as string)
+    : null;
   const imageUrl = formData.get("image_url") as string;
 
   const { data: print, error: printError } = await supabase
@@ -70,6 +74,7 @@ export async function createPrint(formData: FormData) {
       makerworld_link: makerworldLink,
       printer_id: printerId,
       print_time_minutes: printTime,
+      power_consumption_w: powerConsumption,
       image_url: imageUrl,
       status: "completed",
     })
@@ -103,6 +108,9 @@ export async function updatePrint(printId: string, formData: FormData) {
   const makerworldLink = formData.get("makerworld_link") as string;
   const printerId = formData.get("printer_id") as string;
   const printTime = parseInt(formData.get("print_time") as string);
+  const powerConsumption = formData.get("power_consumption_w")
+    ? parseInt(formData.get("power_consumption_w") as string)
+    : null;
   const imageUrl = formData.get("image_url") as string;
 
   const { error: updateError } = await supabase
@@ -114,6 +122,7 @@ export async function updatePrint(printId: string, formData: FormData) {
       printer_id: printerId,
       image_url: imageUrl,
       print_time_minutes: printTime,
+      power_consumption_w: powerConsumption,
     })
     .eq("id", printId)
     .eq("user_id", user.id);

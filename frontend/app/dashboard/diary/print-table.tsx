@@ -32,9 +32,15 @@ interface PrintTableProps {
   prints: Print[];
   printers: Printer[];
   filaments: Filament[];
+  electricityPrice: number | null;
 }
 
-export function PrintTable({ prints, printers, filaments }: PrintTableProps) {
+export function PrintTable({
+  prints,
+  printers,
+  filaments,
+  electricityPrice,
+}: PrintTableProps) {
   const [editingPrint, setEditingPrint] = useState<Print | null>(null);
 
   const handleDelete = async (id: string) => {
@@ -56,6 +62,15 @@ export function PrintTable({ prints, printers, filaments }: PrintTableProps) {
         }
       });
     }
+
+    // Calculate Electricity Cost
+    // Assumption: power_consumption_w is Total Wh.
+    if (print.power_consumption_w && electricityPrice) {
+      const kwh = print.power_consumption_w / 1000;
+      const electricityCost = kwh * (electricityPrice / 100);
+      totalCost += electricityCost;
+    }
+
     return {
       cost: totalCost.toFixed(2),
       currency: currency === "EUR" ? "€" : "$",
@@ -72,6 +87,7 @@ export function PrintTable({ prints, printers, filaments }: PrintTableProps) {
             <TableHead>Drucker</TableHead>
             <TableHead>Filamente</TableHead>
             <TableHead>Zeit</TableHead>
+            <TableHead>Stromkosten</TableHead>
             <TableHead>Kosten</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
@@ -131,6 +147,22 @@ export function PrintTable({ prints, printers, filaments }: PrintTableProps) {
                 </TableCell>
                 <TableCell className="text-sm">
                   {print.print_time_minutes}m
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {print.power_consumption_w && electricityPrice ? (
+                    <>
+                      {(
+                        (print.power_consumption_w / 1000) *
+                        (electricityPrice / 100)
+                      ).toFixed(2)}{" "}
+                      {currency}
+                      <div className="text-[10px]">
+                        ({print.power_consumption_w} Wh)
+                      </div>
+                    </>
+                  ) : (
+                    "-"
+                  )}
                 </TableCell>
                 <TableCell className="text-sm font-medium">
                   {cost} {currency}

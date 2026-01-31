@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { updateProfile } from "./actions";
+
 import { PrinterConnectForm } from "./PrinterConnectForm";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,14 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SettingsForm } from "./SettingsForm";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -48,30 +41,13 @@ export default async function SettingsPage() {
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Währung</CardTitle>
+            <CardTitle>Währung & Stromkosten</CardTitle>
             <CardDescription>
-              Wähle deine bevorzugte Währung für Filament-Kosten.
+              Wähle deine bevorzugte Währung und hinterlege deinen Strompreis.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={updateProfile} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currency">Währung</Label>
-                <Select
-                  name="currency"
-                  defaultValue={profile?.currency || "EUR"}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Währung wählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="EUR">Euro (€)</SelectItem>
-                    <SelectItem value="USD">US Dollar ($)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit">Speichern</Button>
-            </form>
+            <SettingsForm profile={profile} />
           </CardContent>
         </Card>
       </div>

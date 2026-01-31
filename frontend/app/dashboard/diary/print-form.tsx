@@ -40,6 +40,9 @@ export function PrintForm({
   const [printTime, setPrintTime] = useState(
     initialData?.print_time_minutes?.toString() || "",
   );
+  const [powerConsumption, setPowerConsumption] = useState(
+    initialData?.power_consumption_w?.toString() || "",
+  );
   const [imageUrl, setImageUrl] = useState(""); // Image URL scraping is only for new ones usually, but could be added
   const [isScraping, setIsScraping] = useState(false);
   const [showScrapePrompt, setShowScrapePrompt] = useState(false);
@@ -396,16 +399,29 @@ export function PrintForm({
         ))}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="print_time">Druckzeit (Minuten)</Label>
-        <Input
-          id="print_time"
-          name="print_time"
-          type="number"
-          placeholder="60"
-          value={printTime}
-          onChange={(e) => setPrintTime(e.target.value)}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="print_time">Druckzeit (Minuten)</Label>
+          <Input
+            id="print_time"
+            name="print_time"
+            type="number"
+            placeholder="60"
+            value={printTime}
+            onChange={(e) => setPrintTime(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="power_consumption_w">Stromverbrauch (Wh)</Label>
+          <Input
+            id="power_consumption_w"
+            name="power_consumption_w"
+            type="number"
+            placeholder="z.B. 230"
+            value={powerConsumption}
+            onChange={(e) => setPowerConsumption(e.target.value)}
+          />
+        </div>
       </div>
 
       <Button type="submit" className="w-full">

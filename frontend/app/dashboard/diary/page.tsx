@@ -34,11 +34,12 @@ export default async function DiaryPage() {
   } = await supabase.auth.getUser();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("currency")
+    .select("currency, price_ct_kwh")
     .eq("id", user?.id)
     .single();
 
   const userCurrency = profile?.currency || "EUR";
+  const electricityPrice = profile?.price_ct_kwh || null;
   const currencySymbol = userCurrency === "EUR" ? "€" : "$";
 
   // Calculate total costs
@@ -51,6 +52,12 @@ export default async function DiaryPage() {
         totalCosts += costPerGram * pf.amount_used_g;
       }
     });
+
+    if (print.power_consumption_w && electricityPrice) {
+      const kwh = print.power_consumption_w / 1000;
+      const electricityCost = kwh * (electricityPrice / 100);
+      totalCosts += electricityCost;
+    }
   });
 
   return (
@@ -82,6 +89,7 @@ export default async function DiaryPage() {
         prints={prints || []}
         printers={printers || []}
         filaments={filaments || []}
+        electricityPrice={electricityPrice}
       />
     </div>
   );
