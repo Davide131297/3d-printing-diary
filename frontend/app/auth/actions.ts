@@ -51,3 +51,36 @@ export async function signout() {
   revalidatePath("/", "layout");
   redirect("/?logged_out=true");
 }
+
+export async function updatePassword(prevState: unknown, formData: FormData) {
+  const supabase = await createClient();
+  const password = formData.get("password") as string;
+
+  const { error } = await supabase.auth.updateUser({
+    password,
+  });
+
+  if (error) {
+    return {
+      error: "Fehler beim Aktualisieren des Passworts: " + error.message,
+    };
+  }
+
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
+}
+
+export async function resetPassword(prevState: unknown, formData: FormData) {
+  const supabase = await createClient();
+  const email = formData.get("email") as string;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
+  });
+
+  if (error) {
+    return { error: "Fehler beim Senden der E-Mail: " + error.message };
+  }
+
+  return { message: "E-Mail zum Zurücksetzen des Passworts wurde gesendet." };
+}
