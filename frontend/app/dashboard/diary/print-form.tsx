@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, CircleHelp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { createPrint, updatePrint } from "./actions";
 import Image from "next/image";
@@ -412,7 +417,17 @@ export function PrintForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="power_consumption_w">Stromverbrauch (Wh)</Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="power_consumption_w">Stromverbrauch (Wh)</Label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Der Gesamtstromverbrauch des Drucks ist gemeint</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <Input
             id="power_consumption_w"
             name="power_consumption_w"

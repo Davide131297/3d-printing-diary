@@ -15,8 +15,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle2 } from "lucide-react";
 import { updateProfile } from "./actions";
 
+interface Profile {
+  currency: string | null;
+  price_ct_kwh: number | null;
+}
+
 interface SettingsFormProps {
-  profile: any;
+  profile: Profile | null;
 }
 
 export function SettingsForm({ profile }: SettingsFormProps) {
