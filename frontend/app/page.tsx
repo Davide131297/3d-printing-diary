@@ -1,6 +1,10 @@
 import LoginModal from "@/components/auth/login-modal";
 import { Printer, Box, Layers, Activity } from "lucide-react";
 import { LogoutAlert } from "@/components/logout-alert";
+import exampleChoosePrinter from "@/assets/images/example-choose-printer.png";
+import exampleDiaryCardView from "@/assets/images/example-diary-card-view.png";
+import exampleFilamentStorage from "@/assets/images/example-filament-storage.png";
+import { ParallaxImage } from "@/components/ui/parallax-image";
 
 export default async function Home(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -22,7 +26,7 @@ export default async function Home(props: {
         <div className="absolute left-[80%] top-0 h-full w-px bg-linear-to-b from-transparent via-primary to-transparent" />
       </div>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
+      <main className="flex-1 flex flex-col items-center p-6 pt-20 relative z-10">
         {/* Main Card / HUD Container */}
         <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Left Column: Text & CTA */}
@@ -129,6 +133,93 @@ export default async function Home(props: {
             </div>
             <div className="absolute -bottom-8 -left-12 p-4 bg-muted/5 border border-white/5 text-muted-foreground rounded-lg backdrop-blur-sm -rotate-6 hover:rotate-0 transition-transform duration-500">
               <Layers className="h-8 w-8 opacity-50" />
+            </div>
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div className="max-w-6xl w-full mt-32 space-y-32 mb-20">
+          <div className="text-center space-y-4 mb-24">
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tighter text-white">
+              Deine 3D-Druck Zentrale
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Verwalte dein Hobby professionell. Alles an einem Ort.
+            </p>
+          </div>
+
+          {/* Feature 1: Printer Management */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-12 items-center">
+            <div className="md:col-span-2 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-primary text-xs font-mono uppercase tracking-widest">
+                <Printer className="h-4 w-4" />
+                <span>Maschinenpark</span>
+              </div>
+              <h3 className="text-2xl md:text-4xl font-bold text-white">
+                Drucker verwalten
+              </h3>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Behalte den Überblick über deinen gesamten Maschinenpark.
+              </p>
+            </div>
+            <div className="md:col-span-3 relative group perspective-1000 w-full overflow-hidden rounded-xl aspect-1806/1614">
+              <div className="absolute inset-0 bg-primary/20 blur-3xl -z-10 rounded-full opacity-20 group-hover:opacity-40 transition-opacity" />
+              <ParallaxImage
+                src={exampleChoosePrinter}
+                alt="Drucker Auswahl Interface"
+                className="hover:scale-105 transition-transform duration-700"
+              />
+            </div>
+          </div>
+
+          {/* Feature 2: Filament Storage */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-12 items-center md:flex-row-reverse">
+            <div className="md:col-span-2 md:order-2 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-primary text-xs font-mono uppercase tracking-widest">
+                <Box className="h-4 w-4" />
+                <span>Materiallager</span>
+              </div>
+              <h3 className="text-2xl md:text-4xl font-bold text-white">
+                Filament Lager
+              </h3>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Verwalte deine Filament-Bestände mit Leichtigkeit. Erfasse
+                Farben, Materialien, Hersteller und verbleibende Mengen. Nie
+                wieder ein Druckabbruch wegen Materialmangel.
+              </p>
+            </div>
+            <div className="md:col-span-3 md:order-1 relative group w-full overflow-hidden rounded-xl aspect-2884/750">
+              <div className="absolute inset-0 bg-primary/20 blur-3xl -z-10 rounded-full opacity-20 group-hover:opacity-40 transition-opacity" />
+              <ParallaxImage
+                src={exampleFilamentStorage}
+                alt="Filament Lager Übersicht"
+                className="hover:scale-105 transition-transform duration-700"
+              />
+            </div>
+          </div>
+
+          {/* Feature 3: Project Diary */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-12 items-center">
+            <div className="md:col-span-2 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-primary text-xs font-mono uppercase tracking-widest">
+                <Layers className="h-4 w-4" />
+                <span>Dokumentation</span>
+              </div>
+              <h3 className="text-2xl md:text-4xl font-bold text-white">
+                Projekt Tagebuch
+              </h3>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Dokumentiere jeden Druck. Lerne aus Fehlern und wechsle
+                blitzschnell zwischen Karten- und Tabellenansicht.
+              </p>
+            </div>
+            <div className="md:col-span-3 relative group w-full overflow-hidden rounded-xl aspect-2900/1752">
+              <div className="absolute inset-0 bg-primary/20 blur-3xl -z-10 rounded-full opacity-20 group-hover:opacity-40 transition-opacity" />
+              <ParallaxImage
+                src={exampleDiaryCardView}
+                alt="Projekt Tagebuch Kartenansicht"
+                className="hover:scale-105 transition-transform duration-700"
+              />
             </div>
           </div>
         </div>
