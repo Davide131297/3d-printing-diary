@@ -39,6 +39,7 @@
     "next": "16.1.4",
     "puppeteer": "^24.35.0",
     "puppeteer-core": "^24.36.0",
+    "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-color": "^2.19.3",
     "react-dom": "19.2.3",

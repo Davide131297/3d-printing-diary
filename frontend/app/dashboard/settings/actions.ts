@@ -37,3 +37,29 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/dashboard/settings");
   return { success: true, message: "Einstellungen gespeichert" };
 }
+
+export async function deleteAccount() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, message: "Nicht authentifiziert" };
+  }
+
+  // Call the RPC function 'delete_user' which must be defined in the database
+  // with SECURITY DEFINER to allow self-deletion.
+  const { error } = await supabase.rpc("delete_user");
+
+  if (error) {
+    console.error("Delete account error:", error);
+    return {
+      success: false,
+      message: "Fehler beim Löschen des Accounts: " + error.message,
+    };
+  }
+
+  await supabase.auth.signOut();
+  return { success: true, message: "Account gelöscht" };
+}

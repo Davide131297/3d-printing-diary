@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SettingsForm } from "./SettingsForm";
+import { DeleteAccountSection } from "./DeleteAccountSection";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -68,6 +69,10 @@ export default async function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="grid gap-6">
+        <DeleteAccountSection />
       </div>
     </div>
   );
