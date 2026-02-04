@@ -71,9 +71,11 @@ export default async function SettingsPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6">
-        <DeleteAccountSection />
-      </div>
+      {user?.email !== "demo@mail.de" && (
+        <div className="grid gap-6">
+          <DeleteAccountSection />
+        </div>
+      )}
     </div>
   );
 }

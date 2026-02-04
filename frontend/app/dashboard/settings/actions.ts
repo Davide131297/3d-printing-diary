@@ -48,6 +48,13 @@ export async function deleteAccount() {
     return { success: false, message: "Nicht authentifiziert" };
   }
 
+  if (user.email === "demo@mail.de") {
+    return {
+      success: false,
+      message: "Der Demo-Account kann nicht gelöscht werden.",
+    };
+  }
+
   // Call the RPC function 'delete_user' which must be defined in the database
   // with SECURITY DEFINER to allow self-deletion.
   const { error } = await supabase.rpc("delete_user");
