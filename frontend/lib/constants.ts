@@ -32,7 +32,7 @@ export const FILAMENT_MANUFACTURERS = [
   "eSun",
   "Overture",
   "Polymaker",
-  "Geetech",
+  "Geeetech",
   "Eryone",
   "Formfutura",
   "3DJake",
