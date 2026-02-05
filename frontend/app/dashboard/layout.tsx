@@ -3,6 +3,8 @@ import { DashboardNav } from "@/components/dashboard-nav";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Image from "next/image";
+import { ChatWidget } from "@/components/chat/chat-widget";
+import { AutoIngest } from "@/components/auto-ingest";
 
 export default async function DashboardLayout({
   children,
@@ -41,6 +43,8 @@ export default async function DashboardLayout({
           <MobileNav />
         </header>
         <main className="flex-1 p-4 md:p-8 relative">{children}</main>
+        <ChatWidget />
+        <AutoIngest />
       </div>
     </div>
   );
