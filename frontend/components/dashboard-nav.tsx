@@ -7,7 +7,15 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
-import { Book, Printer, Package, Settings, Home, LogOut } from "lucide-react";
+import {
+  Book,
+  Printer,
+  Package,
+  Settings,
+  Home,
+  LogOut,
+  Calculator,
+} from "lucide-react";
 import { signout } from "@/app/auth/actions";
 
 interface DashboardNavProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -41,6 +49,11 @@ export function DashboardNav({
       title: "Filamente",
       href: "/dashboard/filaments",
       icon: Package,
+    },
+    {
+      title: "Filament-Rechner",
+      href: "/dashboard/calculator",
+      icon: Calculator,
     },
     {
       title: "Einstellungen",
