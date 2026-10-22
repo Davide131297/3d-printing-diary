@@ -1,5 +1,7 @@
 import LoginModal from "@/components/auth/login-modal";
-import { Printer, Box, Layers, Activity } from "lucide-react";
+import { Printer, Box, Layers, Activity, Calculator } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { LogoutAlert } from "@/components/logout-alert";
 import exampleChoosePrinter from "@/assets/images/example-choose-printer.png";
 import exampleDiaryCardView from "@/assets/images/example-diary-card-view.png";
@@ -58,6 +60,17 @@ export default async function Home(props: {
 
             <div className="flex flex-wrap gap-4 pt-2">
               <LoginModal />
+              <Button
+                size="lg"
+                variant="ghost"
+                className="h-14 px-8 text-lg rounded-sm border border-white/10 hover:border-primary/50"
+                asChild
+              >
+                <Link href="/calculator">
+                  <Calculator className="mr-2 h-5 w-5" />
+                  Filament-Rechner
+                </Link>
+              </Button>
             </div>
           </div>
 

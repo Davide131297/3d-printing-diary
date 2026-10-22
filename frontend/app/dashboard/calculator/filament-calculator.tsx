@@ -84,7 +84,14 @@ function newKey(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function FilamentCalculator({ filaments }: { filaments: Filament[] }) {
+export function FilamentCalculator({
+  filaments,
+  showStock = false,
+}: {
+  filaments: Filament[];
+  // Only logged-in users have a stock to compare against
+  showStock?: boolean;
+}) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [linkInput, setLinkInput] = useState("");
   const [inputError, setInputError] = useState("");
@@ -324,7 +331,7 @@ export function FilamentCalculator({ filaments }: { filaments: Filament[] }) {
                             {formatGrams(c.grams)}
                           </span>
                         </div>
-                        {c.stock.length > 0 ? (
+                        {!showStock ? null : c.stock.length > 0 ? (
                           <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                             {enough ? (
                               <CheckCircle2 className="h-3 w-3 text-green-600 shrink-0" />
