@@ -1,4 +1,3 @@
-import { getCurrentUser } from "@/lib/auth";
 import { scrapeMakerWorld } from "@/lib/scraper-server";
 import { NextResponse } from "next/server";
 
@@ -6,11 +5,6 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { url } = await req.json().catch(() => ({}));
   if (!url || typeof url !== "string") {
     return NextResponse.json({ error: "URL is required" }, { status: 400 });
