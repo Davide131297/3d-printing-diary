@@ -4,7 +4,7 @@ Eine Web-App, mit der du deine 3D-Drucke dokumentierst, deinen Filament-Bestand 
 
 Statt Notizzettel und Excel-Tabellen: Ein MakerWorld-Link reicht, und die App holt sich Modellname, Bild, Druckzeit und Filamentbedarf automatisch.
 
-![Druck-Tagebuch in der Kartenansicht](frontend/assets/images/example-diary-card-view.png)
+![Druck-Tagebuch in der Kartenansicht](assets/images/example-diary-card-view.png)
 
 ---
 
@@ -42,24 +42,25 @@ Statt Notizzettel und Excel-Tabellen: Ein MakerWorld-Link reicht, und die App ho
 
 ## 🏗️ Aufbau
 
-Das Repository besteht aus zwei Teilen:
+Alles liegt in einer einzigen Next.js-App im Repository-Root:
 
 ```
 3d-printing-diary/
-├── frontend/   # Next.js-App (UI, API-Routen, Auth, Datenbank-Zugriff)
-├── backend/    # Kleiner Express-Server zum Scrapen von MakerWorld mit Puppeteer
-└── .github/    # GitHub Action: Deployment des Backends auf einen Raspberry Pi
+├── app/          # Seiten und API-Routen (App Router)
+├── components/   # UI-Komponenten
+├── lib/          # Auth, Datenbank, MakerWorld-Scraper
+└── ...
 ```
 
 | Teil | Technik | Hosting |
 |------|---------|---------|
-| **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Radix UI / shadcn, React Hook Form + Zod | Vercel |
+| **App** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Radix UI / shadcn, React Hook Form + Zod | Vercel |
 | **Datenbank** | MongoDB (Collections u. a. `users`, `sessions`, `prints`, `filaments`, `printers`, `documents`) | MongoDB Atlas |
 | **Auth** | Eigene Session-Auth (bcrypt + HTTP-Cookie) | – |
 | **KI** | Google Gemini (`@google/genai`) für Chat und Embeddings | – |
-| **Backend** | Node.js, Express 5, Puppeteer, Cheerio | Raspberry Pi (PM2 + ngrok), Deployment per GitHub Action |
+| **Scraper** | `puppeteer-core` + `@sparticuz/chromium` + Cheerio in `/api/scrape` | Vercel Function |
 
-**Warum ein separates Backend?** MakerWorld lässt sich nicht immer mit einfachem HTML-Parsing auslesen. Das Backend rendert die Seite mit einem echten Chromium (Puppeteer). Die Next.js-App ruft es über `NEXT_PUBLIC_BACKEND_URL` auf und nutzt zusätzlich einen eigenen Cheerio-Scraper unter `/api/scrape`.
+**MakerWorld-Scraper:** MakerWorld lässt sich nicht immer mit einfachem HTML-Parsing auslesen. Die Route `POST /api/scrape` (`lib/scraper-server.ts`) rendert die Seite deshalb mit einem echten Chromium. Auf Vercel kommt dafür `@sparticuz/chromium` zum Einsatz, lokal dein installiertes Chrome. Die Route erfordert einen Login.
 
 ---
 
@@ -67,25 +68,22 @@ Das Repository besteht aus zwei Teilen:
 
 ### Voraussetzungen
 - Node.js 20+
-- Yarn 4 (Frontend) bzw. npm (Backend)
+- Yarn 4
 - Eine MongoDB-Instanz (lokal oder Atlas)
+- Google Chrome (für den MakerWorld-Import lokal; alternativ `CHROME_PATH` setzen)
 - Optional: Google-AI-API-Key für den KI-Assistenten
 
-### Frontend
-
 ```bash
-cd frontend
 yarn install
 ```
 
-`frontend/.env.local` anlegen:
+`.env.local` anlegen:
 
 ```env
 MONGODB_URI_STRING=mongodb+srv://...
 NEXTAUTH_SECRET=<zufälliger String, mind. 32 Zeichen – wird zum Verschlüsseln der Drucker-Access-Codes genutzt>
 GOOGLE_AI_KEY=<Google AI API Key>          # optional, für den KI-Chat
-NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
-NEXT_PUBLIC_BACKEND_TOKEN=<gleicher Wert wie BACKEND_TOKEN im Backend>
+CHROME_PATH=<Pfad zu Chrome>               # optional, falls Chrome nicht am Standardort liegt
 ```
 
 ```bash
@@ -94,35 +92,15 @@ yarn dev
 
 Die App läuft dann unter [http://localhost:3000](http://localhost:3000).
 
-### Backend (optional, für den MakerWorld-Import per Puppeteer)
-
-```bash
-cd backend
-npm install
-```
-
-`backend/.env` anlegen:
-
-```env
-BACKEND_TOKEN=<geheimer Token>
-```
-
-```bash
-npm run dev
-```
-
-Der Server läuft auf Port `3001` und bietet den Endpunkt `POST /scrape` (Body: `{ "url": "<MakerWorld-URL>" }`, Header: `Authorization: Bearer <BACKEND_TOKEN>`).
-
 ---
 
 ## 📦 Deployment
 
-- **Frontend:** Vercel (Konfiguration in `frontend/vercel.json`)
-- **Backend:** Bei jedem Push auf `main`, der etwas in `backend/` ändert, deployt die GitHub Action [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) auf einen Self-Hosted Runner (Raspberry Pi) und startet den Prozess über PM2 neu. Der `BACKEND_TOKEN` kommt dabei aus den GitHub Secrets.
+Das Projekt wird auf Vercel deployt (Konfiguration in `vercel.json`). Es braucht keine weitere Infrastruktur: Der Scraper läuft als Vercel Function.
 
 ---
 
-## 🛠️ Nützliche Befehle (Frontend)
+## 🛠️ Nützliche Befehle 
 
 | Befehl | Beschreibung |
 |--------|--------------|
@@ -138,4 +116,4 @@ Der Server läuft auf Port `3001` und bietet den Endpunkt `POST /scrape` (Body: 
 
 | Tabellenansicht | Filament-Lager | Druckerauswahl |
 |---|---|---|
-| ![Tabelle](frontend/assets/images/example-diary-table-view.png) | ![Filamente](frontend/assets/images/example-filament-storage.png) | ![Drucker](frontend/assets/images/example-choose-printer.png) |
+| ![Tabelle](assets/images/example-diary-table-view.png) | ![Filamente](assets/images/example-filament-storage.png) | ![Drucker](assets/images/example-choose-printer.png) |

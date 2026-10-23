@@ -1,4 +1,4 @@
-// MakerWorld scraping runs in the backend (backend/scraper.js).
+// MakerWorld scraping runs server-side (lib/scraper-server.ts via /api/scrape).
 // This file only holds the response types and the client call.
 
 export type FilamentWeight = {
@@ -28,26 +28,9 @@ export type ScrapedData = {
 };
 
 export async function scrapeMakerWorld(url: string): Promise<ScrapedData> {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-  if (!backendUrl) {
-    throw new Error("NEXT_PUBLIC_BACKEND_URL ist nicht gesetzt");
-  }
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
-  if (!backendUrl.includes("localhost")) {
-    headers["ngrok-skip-browser-warning"] = "true";
-  }
-
-  if (process.env.NEXT_PUBLIC_BACKEND_TOKEN) {
-    headers["Authorization"] = `Bearer ${process.env.NEXT_PUBLIC_BACKEND_TOKEN}`;
-  }
-
-  const res = await fetch(`${backendUrl}/scrape`, {
+  const res = await fetch("/api/scrape", {
     method: "POST",
-    headers,
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url }),
   });
 

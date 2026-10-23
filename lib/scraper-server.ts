@@ -1,47 +1,49 @@
-import puppeteer from "puppeteer";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import puppeteer, { type Browser } from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import * as cheerio from "cheerio";
 import fs from "fs";
+import type { PrintProfile, ScrapedData } from "@/lib/scrape";
 
-// Helper to get browser instance
-async function getBrowser() {
-  const launchOptions = {
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--disable-gpu",
-    ],
-  };
+// Local dev: use an installed Chrome; on Vercel/Linux: bundled serverless chromium
+function findLocalChrome(): string | undefined {
+  const candidates = [
+    process.env.CHROME_PATH,
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/chromium",
+  ];
+  return candidates.find((p) => p && fs.existsSync(p));
+}
 
-  // Helper to find system browser on Linux (especially for Raspberry Pi ARM)
-  if (process.platform === "linux") {
-    const possiblePaths = [
-      "/usr/bin/chromium-browser",
-      "/usr/bin/chromium",
-      "/usr/bin/google-chrome-stable",
-    ];
-
-    for (const path of possiblePaths) {
-      if (fs.existsSync(path)) {
-        console.log(`Using system browser at: ${path}`);
-        launchOptions.executablePath = path;
-        break;
-      }
-    }
+async function getBrowser(): Promise<Browser> {
+  if (process.env.VERCEL) {
+    return puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    });
   }
 
-  return puppeteer.launch(launchOptions);
+  const executablePath = findLocalChrome();
+  if (!executablePath) {
+    throw new Error("Kein Chrome gefunden. Setze CHROME_PATH in .env");
+  }
+  return puppeteer.launch({
+    executablePath,
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu"],
+  });
 }
 
 // Scrape function
-export async function scrapeMakerWorld(url) {
+export async function scrapeMakerWorld(url: string): Promise<ScrapedData | null> {
   if (!url.includes("makerworld.com")) {
     return null;
   }
 
-  let browser = null;
+  let browser: Browser | null = null;
 
   try {
     browser = await getBrowser();
@@ -85,9 +87,9 @@ export async function scrapeMakerWorld(url) {
         if (!design) return null;
 
         const instances = design.instances || [];
-        const profiles = instances.map((inst) => {
+        const profiles = instances.map((inst: any) => {
           const rawFilaments = inst.instanceFilaments || [];
-          const filamentWeights = rawFilaments.map((f) => {
+          const filamentWeights = rawFilaments.map((f: any) => {
             let col = f.color || "#CCCCCC";
             if (!col.startsWith("#") && /^[0-9A-Fa-f]{6}$/.test(col)) {
               col = "#" + col;
@@ -98,7 +100,7 @@ export async function scrapeMakerWorld(url) {
               material: f.type || "PLA",
               usedM: f.usedM ? String(f.usedM) : undefined,
             };
-          }).filter((f) => f.amount > 0);
+          }).filter((f: any) => f.amount > 0);
 
           return {
             id: String(inst.id),
@@ -111,16 +113,16 @@ export async function scrapeMakerWorld(url) {
           };
         });
 
-        let selectedId = reqProfileId && profiles.some((p) => p.id === reqProfileId)
+        let selectedId = reqProfileId && profiles.some((p: any) => p.id === reqProfileId)
           ? reqProfileId
           : undefined;
 
         if (!selectedId) {
-          const def = profiles.find((p) => p.isDefault);
+          const def = profiles.find((p: any) => p.isDefault);
           selectedId = def ? def.id : profiles[0]?.id;
         }
 
-        const selectedProfile = profiles.find((p) => p.id === selectedId) || profiles[0];
+        const selectedProfile = profiles.find((p: any) => p.id === selectedId) || profiles[0];
         const ogImage = document.querySelector('meta[property="og:image"]')?.getAttribute("content");
         const title = (design.titleTranslated || design.title || "").replace(/\| MakerWorld$/i, "").trim();
 
@@ -193,7 +195,7 @@ export async function scrapeMakerWorld(url) {
     }
 
     // Timer Parse Helper
-    const parseTime = (text) => {
+    const parseTime = (text: string) => {
       const lowerTime = text.toLowerCase();
       if (lowerTime.includes("h")) {
         const hours = parseFloat(lowerTime.replace("h", "").trim());
@@ -222,7 +224,7 @@ export async function scrapeMakerWorld(url) {
     title = title.replace(/\| MakerWorld$/i, "").trim();
 
     // 4. Profiles with Filament Weights (Puppeteer Interaction)
-    const profiles = [];
+    const profiles: PrintProfile[] = [];
 
     const titleHandles = await page.$$(".config_title");
 
@@ -245,7 +247,7 @@ export async function scrapeMakerWorld(url) {
         } catch {}
 
         // Extract grams from popover
-        let filamentWeights = [];
+        let filamentWeights: { amount: number; color: string }[] = [];
         const popover = await page.$(
           "#mouse-over-popover, .mouse-over-popover",
         );
@@ -286,7 +288,7 @@ export async function scrapeMakerWorld(url) {
 
                 return { amount, color };
               })
-              .filter((f) => f.amount > 0);
+              .filter((f: any) => f.amount > 0);
           });
 
           filamentWeights = filaments;

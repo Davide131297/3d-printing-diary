@@ -3,6 +3,10 @@
     "app/api/**/*.ts": {
       "memory": 1024,
       "maxDuration": 30
+    },
+    "app/api/scrape/route.ts": {
+      "memory": 1024,
+      "maxDuration": 60
     }
   }
 }
