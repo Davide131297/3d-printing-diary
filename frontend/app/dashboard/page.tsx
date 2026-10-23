@@ -1,4 +1,5 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { getDashboardStats } from "@/lib/db";
 import Link from "next/link";
 import {
   Card,
@@ -10,36 +11,22 @@ import {
 } from "@/components/ui/card";
 import { Printer, Package } from "lucide-react";
 import { LivePrinterStatus } from "@/components/LivePrinterStatus";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
-  // Fetch stats (parallel)
-  const [printsResponse, printersResponse, filamentsResponse] =
-    await Promise.all([
-      supabase
-        .from("prints")
-        .select("id, created_at, title, model_name, auto_captured")
-        .order("created_at", { ascending: false })
-        .limit(5),
-      supabase.from("printers").select("id", { count: "exact", head: true }),
-      supabase.from("filaments").select("id", { count: "exact", head: true }),
-    ]);
+  if (!user) {
+    redirect("/");
+  }
 
-  const recentPrints = printsResponse.data || [];
-  // const printCount = printsResponse.count;
-  // Better way for total count:
-  const { count: totalPrints } = await supabase
-    .from("prints")
-    .select("*", { count: "exact", head: true });
+  const { totalPrints, printerCount, filamentCount, recentPrints } =
+    await getDashboardStats(user.id);
 
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold tracking-tight">
-        Hallo, {user?.email}
+        Hallo, {user.email}
       </h1>
 
       <LivePrinterStatus />
@@ -65,9 +52,7 @@ export default async function DashboardPage() {
             <Printer className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {printersResponse.count || 0}
-            </div>
+            <div className="text-2xl font-bold">{printerCount || 0}</div>
             <p className="text-xs text-muted-foreground">Registrierte Geräte</p>
           </CardContent>
         </Card>
@@ -79,9 +64,7 @@ export default async function DashboardPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {filamentsResponse.count || 0}
-            </div>
+            <div className="text-2xl font-bold">{filamentCount || 0}</div>
             <p className="text-xs text-muted-foreground">Im Inventar</p>
           </CardContent>
         </Card>

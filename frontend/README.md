@@ -15,7 +15,7 @@ A comprehensive application to track your 3D printing projects, manage filament 
 ## Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org/) (App Router)
-- **Database**: [Supabase](https://supabase.com/)
+- **Database**: [MongoDB](https://www.mongodb.com/)
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) & [Radix UI](https://www.radix-ui.com/)
 - **Forms**: React Hook Form & Zod
 - **Automation**: Puppeteer (for scraping model data)
@@ -37,7 +37,7 @@ A comprehensive application to track your 3D printing projects, manage filament 
 
 3. **Set up Environment Variables:**
 
-   Create a `.env.local` file and configure your Supabase credentials and other necessary secrets.
+   Create a `.env` file and configure your `MONGODB_URI_STRING` and other necessary secrets.
 
 4. **Run the development server:**
 

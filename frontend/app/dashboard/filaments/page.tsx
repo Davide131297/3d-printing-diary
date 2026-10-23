@@ -1,49 +1,20 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { getFilaments, getProfile } from "@/lib/db";
 import { AddFilamentDialog } from "./add-filament-dialog";
 import { FilamentList } from "./filament-list";
-import { Filament } from "@/types/diary";
+import { redirect } from "next/navigation";
 
 export default async function FilamentsPage() {
-  const supabase = await createClient();
-  const { data: filamentsData } = (await supabase
-    .from("filaments")
-    .select(
-      `
-      *,
-      print_filaments (
-        amount_used_g
-      )
-    `,
-    )
-    .order("created_at", { ascending: false })) as {
-    data:
-      | (Filament & { print_filaments: { amount_used_g: number }[] })[]
-      | null;
-  };
+  const user = await getCurrentUser();
 
-  const filaments: (Filament & { remaining_g: number })[] = (
-    filamentsData || []
-  ).map((f) => {
-    const used =
-      f.print_filaments?.reduce(
-        (acc: number, curr: { amount_used_g: number }) =>
-          acc + curr.amount_used_g,
-        0,
-      ) || 0;
-    return {
-      ...f,
-      remaining_g: f.weight_g - used,
-    };
-  });
+  if (!user) {
+    redirect("/");
+  }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("currency")
-    .eq("id", user?.id)
-    .single();
+  const [filaments, profile] = await Promise.all([
+    getFilaments(user.id),
+    getProfile(user.id),
+  ]);
 
   const userCurrency = profile?.currency || "EUR";
   const currencySymbol = userCurrency === "EUR" ? "€" : "$";

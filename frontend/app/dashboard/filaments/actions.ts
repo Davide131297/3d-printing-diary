@@ -1,24 +1,22 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import {
+  addFilament as insertFilamentDb,
+  deleteFilament as deleteFilamentDb,
+  updateFilament as updateFilamentDb,
+  getProfile,
+} from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function addFilament(formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) {
     return;
   }
 
   // Get user currency
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("currency")
-    .eq("id", user.id)
-    .single();
+  const profile = await getProfile(user.id);
   const currency = profile?.currency || "EUR";
 
   const name = formData.get("name") as string;
@@ -26,57 +24,43 @@ export async function addFilament(formData: FormData) {
   const material = formData.get("material") as string;
   const color = formData.get("color") as string; // Hex code
   const price = parseFloat(formData.get("price") as string);
-  const weight = parseInt(formData.get("weight") as string);
+  const weight = parseInt(formData.get("weight") as string, 10);
 
-  const { error } = await supabase.from("filaments").insert({
-    user_id: user.id,
-    name,
-    manufacturer,
-    material,
-    color,
-    price,
-    currency,
-    weight_g: weight,
-  });
-
-  if (error) {
-    console.error(error);
-    return;
+  try {
+    await insertFilamentDb({
+      user_id: user.id,
+      name,
+      manufacturer,
+      material,
+      color,
+      price,
+      currency,
+      weight_g: weight,
+    });
+    revalidatePath("/dashboard/filaments");
+    revalidatePath("/dashboard");
+  } catch (error) {
+    console.error("Failed to add filament:", error);
   }
-
-  revalidatePath("/dashboard/filaments");
 }
 
 export async function deleteFilament(id: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) {
     return;
   }
 
-  const { error } = await supabase
-    .from("filaments")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", user.id);
-
-  if (error) {
-    console.error(error);
-    return;
+  try {
+    await deleteFilamentDb(id, user.id);
+    revalidatePath("/dashboard/filaments");
+    revalidatePath("/dashboard");
+  } catch (error) {
+    console.error("Failed to delete filament:", error);
   }
-
-  revalidatePath("/dashboard/filaments");
 }
 
 export async function editFilament(id: string, formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) {
     return;
   }
@@ -86,25 +70,19 @@ export async function editFilament(id: string, formData: FormData) {
   const material = formData.get("material") as string;
   const color = formData.get("color") as string;
   const price = parseFloat(formData.get("price") as string);
-  const weight = parseInt(formData.get("weight") as string);
+  const weight = parseInt(formData.get("weight") as string, 10);
 
-  const { error } = await supabase
-    .from("filaments")
-    .update({
+  try {
+    await updateFilamentDb(id, user.id, {
       name,
       manufacturer,
       material,
       color,
       price,
       weight_g: weight,
-    })
-    .eq("id", id)
-    .eq("user_id", user.id);
-
-  if (error) {
-    console.error(error);
-    return;
+    });
+    revalidatePath("/dashboard/filaments");
+  } catch (error) {
+    console.error("Failed to edit filament:", error);
   }
-
-  revalidatePath("/dashboard/filaments");
 }

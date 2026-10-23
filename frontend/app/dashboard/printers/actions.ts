@@ -1,15 +1,12 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { addPrinter as insertPrinterDb, deletePrinter as deletePrinterDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { PRINTER_MODELS } from "@/lib/constants";
 
 export async function addPrinter(formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) {
     return;
   }
@@ -22,41 +19,31 @@ export async function addPrinter(formData: FormData) {
     return;
   }
 
-  const { error } = await supabase.from("printers").insert({
-    user_id: user.id,
-    name: name,
-    model: model.name,
-    image_url: model.image,
-  });
-
-  if (error) {
-    console.error(error);
-    return;
+  try {
+    await insertPrinterDb({
+      user_id: user.id,
+      name: name,
+      model: model.name,
+      image_url: model.image,
+    });
+    revalidatePath("/dashboard/printers");
+    revalidatePath("/dashboard");
+  } catch (error) {
+    console.error("Failed to add printer:", error);
   }
-
-  revalidatePath("/dashboard/printers");
 }
 
 export async function deletePrinter(printerId: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) {
     return;
   }
 
-  const { error } = await supabase
-    .from("printers")
-    .delete()
-    .eq("id", printerId)
-    .eq("user_id", user.id);
-
-  if (error) {
-    console.error(error);
-    return;
+  try {
+    await deletePrinterDb(printerId, user.id);
+    revalidatePath("/dashboard/printers");
+    revalidatePath("/dashboard");
+  } catch (error) {
+    console.error("Failed to delete printer:", error);
   }
-
-  revalidatePath("/dashboard/printers");
 }

@@ -1,17 +1,20 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { getPrinters } from "@/lib/db";
 import { DeletePrinterButton } from "./delete-button";
 import { AddPrinterDialog } from "./add-printer-dialog";
+import { redirect } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 
 export default async function PrintersPage() {
-  const supabase = await createClient();
+  const user = await getCurrentUser();
 
-  // Safe fetch for printers
-  const { data: printers } = await supabase.from("printers").select("*");
+  if (!user) {
+    redirect("/");
+  }
 
-  // Handle empty state explicitly
+  const printers = await getPrinters(user.id);
   const safePrinters = printers || [];
 
   return (

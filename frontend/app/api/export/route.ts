@@ -1,6 +1,6 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { getPrints, getProfile } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { Print } from "@/types/diary";
 
 // Helper function to escape CSV fields
 const escapeCsv = (field: string | number | null | undefined) => {
@@ -17,36 +17,16 @@ const escapeCsv = (field: string | number | null | undefined) => {
 };
 
 export async function GET() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  // Fetch all prints with related data
-  const { data: prints } = (await supabase
-    .from("prints")
-    .select(
-      `
-      *,
-      printers (name, model),
-      print_filaments (
-          amount_used_g,
-          filaments (id, name, color, manufacturer, price, weight_g, currency)
-      )
-    `,
-    )
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })) as { data: Print[] | null };
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("price_ct_kwh")
-    .eq("id", user.id)
-    .single();
+  const [prints, profile] = await Promise.all([
+    getPrints(user.id),
+    getProfile(user.id),
+  ]);
 
   const electricityPrice = profile?.price_ct_kwh || null;
 
@@ -77,11 +57,6 @@ export async function GET() {
       : "Unknown Printer";
     const date = new Date(print.created_at).toISOString().split("T")[0];
 
-    // If a print has multiple filaments, create a row for each or combine them?
-    // Let's create a row for each filament usage to be detailed, or just one row per print.
-    // Given the request is "export as CSV", usually flattened data is better.
-    // If there are no filaments, we still want a row.
-
     const powerConsumption = print.power_consumption_w || 0;
     let electricityCostValue = 0;
     if (powerConsumption && electricityPrice) {
@@ -90,7 +65,6 @@ export async function GET() {
     }
 
     if (!print.print_filaments || print.print_filaments.length === 0) {
-      // If no filament usage, we still export the print with electricity cost if applicable
       return [
         {
           date: date,
@@ -127,9 +101,6 @@ export async function GET() {
         }
       }
 
-      // We only want to add the electricity cost ONCE per print, typically on the first line item
-      // if there are multiple filaments used. Or we could split it?
-      // Simplest is to put it on the first row of the print.
       const currentElectricityCost =
         index === 0 ? electricityCostValue.toFixed(2) : "0.00";
       const currentElectricityWh = index === 0 ? powerConsumption : 0;
@@ -172,7 +143,6 @@ export async function GET() {
     ),
   ].join("\n");
 
-  // Create response with appropriate headers for download
   return new NextResponse(csvContent, {
     status: 200,
     headers: {

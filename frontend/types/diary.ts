@@ -2,6 +2,7 @@ export interface Printer {
   id: string;
   name: string;
   model: string;
+  image_url?: string;
 }
 
 export interface Filament {

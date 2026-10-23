@@ -15,7 +15,7 @@ Eine umfassende Anwendung zur Verfolgung deiner 3D-Druckprojekte, zur Verwaltung
 ## Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org/) (App Router)
-- **Datenbank**: [Supabase](https://supabase.com/)
+- **Datenbank**: [MongoDB](https://www.mongodb.com/)
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) & [Radix UI](https://www.radix-ui.com/)
 - **Formulare**: React Hook Form & Zod
 - **Automatisierung**: Puppeteer (für das Scraping von Modelldaten)
@@ -37,7 +37,7 @@ Eine umfassende Anwendung zur Verfolgung deiner 3D-Druckprojekte, zur Verwaltung
 
 3. **Umgebungsvariablen einrichten:**
 
-   Erstelle eine `.env.local` Datei und konfiguriere deine Supabase-Zugangsdaten und andere notwendige Secrets.
+   Erstelle eine `.env` Datei und konfiguriere deine `MONGODB_URI_STRING` und andere notwendige Secrets.
 
 4. **Entwicklungsserver starten:**
 

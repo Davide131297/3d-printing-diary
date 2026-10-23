@@ -1,6 +1,6 @@
 import { MobileNav } from "@/components/mobile-nav";
 import { DashboardNav } from "@/components/dashboard-nav";
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import { ChatWidget } from "@/components/chat/chat-widget";
@@ -11,14 +11,10 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/");
   }
 
   return (

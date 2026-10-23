@@ -1,4 +1,6 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { getProfile } from "@/lib/db";
+import { redirect } from "next/navigation";
 
 import { PrinterConnectForm } from "./PrinterConnectForm";
 import { Button } from "@/components/ui/button";
@@ -14,20 +16,13 @@ import { DeleteAccountSection } from "./DeleteAccountSection";
 import { KnowledgeBaseSection } from "./KnowledgeBaseSection";
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
-  let profile = null;
-  if (user) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    profile = data;
+  if (!user) {
+    redirect("/");
   }
+
+  const profile = await getProfile(user.id);
 
   return (
     <div className="space-y-6">
@@ -38,7 +33,7 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      {user && <PrinterConnectForm />}
+      <PrinterConnectForm />
 
       <div className="grid gap-6">
         <Card>

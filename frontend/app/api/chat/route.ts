@@ -1,4 +1,5 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { searchDocuments, getFilaments } from "@/lib/db";
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
@@ -18,18 +19,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "API key missing" }, { status: 500 });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
-
-    // Validate user session
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const user = await getCurrentUser();
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const ai = new GoogleGenAI({ apiKey });
 
     // 1. Generate text embedding for the user's message
     const embeddingResponse = await ai.models.embedContent({
@@ -37,62 +32,32 @@ export async function POST(req: Request) {
       contents: message,
     });
 
-    // Check if embeddings.values exists, assuming SDK structure based on lint
     const embedding = embeddingResponse.embeddings?.[0]?.values;
 
-    // 2. Query Supabase for relevant documents
-
-    const { data: documents, error: matchError } = await supabase.rpc(
-      "match_documents",
-      {
-        query_embedding: embedding,
-        match_threshold: 0.2, // Lowered threshold for better retrieval
-        match_count: 30,
-      },
-    );
-
-    if (matchError) {
-      console.error("Vector search error:", matchError);
-      return NextResponse.json(
-        { error: "Failed to retrieve context" },
-        { status: 500 },
-      );
+    // 2. Query MongoDB for relevant documents using vector cosine similarity
+    let documents: { content: string }[] = [];
+    if (embedding) {
+      documents = await searchDocuments(user.id, embedding, 30, 0.2);
     }
 
     // 3. Construct prompt with context
     const contextText =
-      documents?.map((doc: { content: string }) => doc.content).join("\n\n") ||
-      "";
+      documents?.map((doc) => doc.content).join("\n\n") || "";
 
-    // --- NEW: Inject Live Stock Data ---
-    // Fetch all filaments and their usage to calculate real-time stock
-    const { data: allFilaments } = await supabase
-      .from("filaments")
-      .select(
-        "id, name, color, material, weight_g, manufacturer, price, currency",
-      );
-
-    const { data: allUsage } = await supabase
-      .from("print_filaments")
-      .select("filament_id, amount_used_g");
-
+    // --- Inject Live Stock Data ---
+    const allFilaments = await getFilaments(user.id);
     let stockContext = "Live Filament Stock Info:\n";
 
-    if (allFilaments && allUsage) {
+    if (allFilaments && allFilaments.length > 0) {
       allFilaments.forEach((fil) => {
-        // Calculate total used for this filament
-        const usedAmount = allUsage
-          .filter((u) => u.filament_id === fil.id)
-          .reduce((sum, u) => sum + (u.amount_used_g || 0), 0);
-
-        const remaining = fil.weight_g - usedAmount;
+        const remaining = fil.remaining_g ?? fil.weight_g;
         const status =
           remaining < 0 ? "EMPTY/DEFICIT" : remaining < 50 ? "LOW" : "OK";
 
         stockContext += `- \`color:${fil.color}\` ${fil.name} (${fil.material}, ${fil.manufacturer}): ${remaining.toFixed(0)}g remaining (Original: ${fil.weight_g}g). Status: ${status}\n`;
       });
     } else {
-      stockContext += "Could not load live stock data.\n";
+      stockContext += "Keine Filamente im Inventar erfasst.\n";
     }
 
     const fullContext = `${stockContext}\n\nExisting Knowledge Base Context:\n${contextText}`;

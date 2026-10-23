@@ -1,16 +1,14 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser, logoutUser } from "@/lib/auth";
+import { upsertProfile, deleteUserAccount } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function updateProfile(formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
-    return;
+    return { success: false, message: "Nicht authentifiziert" };
   }
 
   const currency = formData.get("currency") as string;
@@ -22,27 +20,24 @@ export async function updateProfile(formData: FormData) {
     price_ct_kwh = parseFloat(priceInput.replace(",", "."));
   }
 
-  const { error } = await supabase.from("profiles").upsert({
-    id: user.id,
-    currency: currency,
-    price_ct_kwh: price_ct_kwh,
-    updated_at: new Date().toISOString(),
-  });
+  try {
+    await upsertProfile(user.id, {
+      currency: currency || "EUR",
+      price_ct_kwh,
+    });
 
-  if (error) {
+    revalidatePath("/dashboard/settings");
+    revalidatePath("/dashboard/filaments");
+    revalidatePath("/dashboard/diary");
+    return { success: true, message: "Einstellungen gespeichert" };
+  } catch (error) {
     console.error("Update error:", error);
     return { success: false, message: "Fehler beim Speichern" };
   }
-
-  revalidatePath("/dashboard/settings");
-  return { success: true, message: "Einstellungen gespeichert" };
 }
 
 export async function deleteAccount() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     return { success: false, message: "Nicht authentifiziert" };
@@ -55,18 +50,16 @@ export async function deleteAccount() {
     };
   }
 
-  // Call the RPC function 'delete_user' which must be defined in the database
-  // with SECURITY DEFINER to allow self-deletion.
-  const { error } = await supabase.rpc("delete_user");
-
-  if (error) {
+  try {
+    await deleteUserAccount(user.id);
+    await logoutUser();
+    return { success: true, message: "Account gelöscht" };
+  } catch (error) {
     console.error("Delete account error:", error);
+    const msg = error instanceof Error ? error.message : "Unbekannter Fehler";
     return {
       success: false,
-      message: "Fehler beim Löschen des Accounts: " + error.message,
+      message: "Fehler beim Löschen des Accounts: " + msg,
     };
   }
-
-  await supabase.auth.signOut();
-  return { success: true, message: "Account gelöscht" };
 }

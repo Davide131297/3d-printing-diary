@@ -1,42 +1,23 @@
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { getPrinters, getFilaments, getPrints, getProfile } from "@/lib/db";
 import { AddPrintDialog } from "./add-print-dialog";
 import { PrintList } from "./print-list";
-import { Print, Printer, Filament } from "@/types/diary";
+import { redirect } from "next/navigation";
 
 export default async function DiaryPage() {
-  const supabase = await createClient();
+  const user = await getCurrentUser();
 
-  // Fetch all needed data in parallel-ish
-  const { data: printers } = (await supabase.from("printers").select("*")) as {
-    data: Printer[] | null;
-  };
-  const { data: filaments } = (await supabase
-    .from("filaments")
-    .select("*")) as { data: Filament[] | null };
+  if (!user) {
+    redirect("/");
+  }
 
-  // Fetch prints with printers, ordered by newest first
-  const { data: prints } = (await supabase
-    .from("prints")
-    .select(
-      `
-        *,
-        printers (name, model),
-        print_filaments (
-            amount_used_g,
-            filaments (id, name, color, manufacturer, price, weight_g, currency)
-        )
-    `,
-    )
-    .order("created_at", { ascending: false })) as { data: Print[] | null };
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("currency, price_ct_kwh")
-    .eq("id", user?.id)
-    .single();
+  // Fetch all needed data in parallel
+  const [printers, filaments, prints, profile] = await Promise.all([
+    getPrinters(user.id),
+    getFilaments(user.id),
+    getPrints(user.id),
+    getProfile(user.id),
+  ]);
 
   const userCurrency = profile?.currency || "EUR";
   const electricityPrice = profile?.price_ct_kwh || null;
@@ -47,7 +28,7 @@ export default async function DiaryPage() {
   prints?.forEach((print) => {
     print.print_filaments?.forEach((pf) => {
       const fil = pf.filaments;
-      if (fil) {
+      if (fil && fil.weight_g > 0) {
         const costPerGram = fil.price / fil.weight_g;
         totalCosts += costPerGram * pf.amount_used_g;
       }
