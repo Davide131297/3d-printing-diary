@@ -49,7 +49,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { Filament } from "@/types/diary";
-import { PrintProfile, ScrapedData } from "@/app/dashboard/diary/scrape";
+import { PrintProfile, scrapeMakerWorld } from "@/lib/scrape";
 import { DbSavedCalculation } from "@/lib/db";
 import { saveCalculationAction, deleteCalculationAction } from "./actions";
 import LoginModal from "@/components/auth/login-modal";
@@ -103,22 +103,6 @@ export function FilamentCalculator({
   const [isSaving, setIsSaving] = useState(false);
   const [savedListOpen, setSavedListOpen] = useState(false);
 
-  // Scrape a single MakerWorld URL
-  const scrapeUrl = async (url: string): Promise<ScrapedData | null> => {
-    const res = await fetch("/api/scrape", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `Fehler beim Laden von ${url}`);
-    }
-
-    return await res.json();
-  };
-
   // Add single link
   const handleAddSingle = async (urlToAdd?: string) => {
     const targetUrl = (urlToAdd || inputUrl).trim();
@@ -136,7 +120,7 @@ export function FilamentCalculator({
     setLoadingText("Analysiere MakerWorld Modell...");
 
     try {
-      const data = await scrapeUrl(targetUrl);
+      const data = await scrapeMakerWorld(targetUrl);
       if (!data || !data.profiles || data.profiles.length === 0) {
         toast.error("Keine Druckprofile für dieses Modell gefunden");
         return;
@@ -202,7 +186,7 @@ export function FilamentCalculator({
       setLoadingText(`Lade Modell ${i + 1} von ${urls.length}...`);
 
       try {
-        const data = await scrapeUrl(targetUrl);
+        const data = await scrapeMakerWorld(targetUrl);
         if (data && data.profiles && data.profiles.length > 0) {
           const hashMatch = targetUrl.match(/profileId-(\d+)/i) || targetUrl.match(/#(\d+)/);
           const requestedId = hashMatch ? hashMatch[1] : undefined;

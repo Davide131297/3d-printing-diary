@@ -21,7 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { createPrint, updatePrint } from "./actions";
 import Image from "next/image";
 import { Printer, Filament, Print } from "@/types/diary";
-import { PrintProfile } from "./scrape";
+import { PrintProfile, scrapeMakerWorld } from "@/lib/scrape";
 import { cn } from "@/lib/utils";
 
 interface PrintFormProps {
@@ -85,43 +85,16 @@ export function PrintForm({
     setIsScraping(true);
     setScrapeError(false);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      const scrapeEndpoint = backendUrl ? `${backendUrl}/scrape` : "/api/scrape";
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
+      const data = await scrapeMakerWorld(makerworldLink);
+      if (data.title) setTitle(data.title);
+      if (data.modelName) setModelName(data.modelName);
+      if (data.printTime) setPrintTime(data.printTime.toString());
+      if (data.imageUrl) setImageUrl(data.imageUrl);
 
-      if (backendUrl && !backendUrl.includes("localhost")) {
-        headers["ngrok-skip-browser-warning"] = "true";
+      if (data.profiles && data.profiles.length > 0) {
+        setAvailableProfiles(data.profiles);
       }
-
-      if (process.env.NEXT_PUBLIC_BACKEND_TOKEN) {
-        headers["Authorization"] =
-          `Bearer ${process.env.NEXT_PUBLIC_BACKEND_TOKEN}`;
-      }
-
-      const res = await fetch(scrapeEndpoint, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ url: makerworldLink }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data) {
-          if (data.title) setTitle(data.title);
-          if (data.modelName) setModelName(data.modelName);
-          if (data.printTime) setPrintTime(data.printTime.toString());
-          if (data.imageUrl) setImageUrl(data.imageUrl);
-
-          if (data.profiles && data.profiles.length > 0) {
-            setAvailableProfiles(data.profiles);
-          }
-          setShowScrapePrompt(false);
-        }
-      } else {
-        setScrapeError(true);
-      }
+      setShowScrapePrompt(false);
     } catch (error) {
       console.error("Error scraping MakerWorld:", error);
       setScrapeError(true);
