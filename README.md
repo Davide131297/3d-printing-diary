@@ -58,9 +58,9 @@ Alles liegt in einer einzigen Next.js-App im Repository-Root:
 | **Datenbank** | MongoDB (Collections u. a. `users`, `sessions`, `prints`, `filaments`, `printers`, `documents`) | MongoDB Atlas |
 | **Auth** | Eigene Session-Auth (bcrypt + HTTP-Cookie) | – |
 | **KI** | Google Gemini (`@google/genai`) für Chat und Embeddings | – |
-| **Scraper** | `puppeteer-core` + `@sparticuz/chromium` + Cheerio in `/api/scrape` | Vercel Function |
+| **Scraper** | ScrapingBee + Cheerio in `/api/scrape` | Vercel Function |
 
-**MakerWorld-Scraper:** MakerWorld lässt sich nicht immer mit einfachem HTML-Parsing auslesen. Die Route `POST /api/scrape` (`lib/scraper-server.ts`) rendert die Seite deshalb mit einem echten Chromium. Auf Vercel kommt dafür `@sparticuz/chromium` zum Einsatz, lokal dein installiertes Chrome. Die Route erfordert einen Login.
+**MakerWorld-Scraper:** MakerWorld blockt Anfragen von Server-IPs per Cloudflare. Die Route `POST /api/scrape` (`lib/scraper-server.ts`) holt die Seite deshalb über ScrapingBee (zuerst die günstigste Einstellung mit 1 Credit, teurere nur bei Blockade) und liest die Modelldaten aus dem eingebetteten `__NEXT_DATA__`-JSON.
 
 ---
 
@@ -70,7 +70,7 @@ Alles liegt in einer einzigen Next.js-App im Repository-Root:
 - Node.js 20+
 - Yarn 4
 - Eine MongoDB-Instanz (lokal oder Atlas)
-- Google Chrome (für den MakerWorld-Import lokal; alternativ `CHROME_PATH` setzen)
+- Ein ScrapingBee-API-Key (für den MakerWorld-Import)
 - Optional: Google-AI-API-Key für den KI-Assistenten
 
 ```bash
@@ -83,7 +83,7 @@ yarn install
 MONGODB_URI_STRING=mongodb+srv://...
 NEXTAUTH_SECRET=<zufälliger String, mind. 32 Zeichen – wird zum Verschlüsseln der Drucker-Access-Codes genutzt>
 GOOGLE_AI_KEY=<Google AI API Key>          # optional, für den KI-Chat
-CHROME_PATH=<Pfad zu Chrome>               # optional, falls Chrome nicht am Standardort liegt
+SCRAPINGBEE_API_KEY=<ScrapingBee API Key>   # für den MakerWorld-Import
 ```
 
 ```bash
