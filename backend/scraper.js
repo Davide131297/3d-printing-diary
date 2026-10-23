@@ -68,12 +68,79 @@ export async function scrapeMakerWorld(url) {
     // Make window appear normal size
     await page.setViewport({ width: 1920, height: 1080 });
 
-    // Go to the URL
-    // networkidle2 is often better for SPAs than domcontentloaded + fixed sleep
-    await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+    // Parse profile ID from URL hash if provided
+    const hashMatch = url.match(/profileId-(\d+)/i) || url.match(/#(\d+)/);
+    const requestedProfileId = hashMatch ? hashMatch[1] : undefined;
 
-    // Reduced delay as we wait for network idle now
-    // await new Promise((r) => setTimeout(r, 1000));
+    // Go to the URL
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
+
+    // Try fast extraction from __NEXT_DATA__
+    const nextDataResult = await page.evaluate((reqProfileId) => {
+      const el = document.getElementById("__NEXT_DATA__");
+      if (!el) return null;
+      try {
+        const json = JSON.parse(el.textContent || "{}");
+        const design = json.props?.pageProps?.design;
+        if (!design) return null;
+
+        const instances = design.instances || [];
+        const profiles = instances.map((inst) => {
+          const rawFilaments = inst.instanceFilaments || [];
+          const filamentWeights = rawFilaments.map((f) => {
+            let col = f.color || "#CCCCCC";
+            if (!col.startsWith("#") && /^[0-9A-Fa-f]{6}$/.test(col)) {
+              col = "#" + col;
+            }
+            return {
+              amount: parseFloat(f.usedG) || 0,
+              color: col.toUpperCase(),
+              material: f.type || "PLA",
+              usedM: f.usedM ? String(f.usedM) : undefined,
+            };
+          }).filter((f) => f.amount > 0);
+
+          return {
+            id: String(inst.id),
+            name: inst.titleTranslated || inst.title || `Profil ${inst.id}`,
+            printTime: inst.prediction ? Math.round(inst.prediction / 60) : undefined,
+            weight: typeof inst.weight === "number" ? inst.weight : undefined,
+            cover: inst.cover || undefined,
+            isDefault: !!inst.isDefault,
+            filamentWeights,
+          };
+        });
+
+        let selectedId = reqProfileId && profiles.some((p) => p.id === reqProfileId)
+          ? reqProfileId
+          : undefined;
+
+        if (!selectedId) {
+          const def = profiles.find((p) => p.isDefault);
+          selectedId = def ? def.id : profiles[0]?.id;
+        }
+
+        const selectedProfile = profiles.find((p) => p.id === selectedId) || profiles[0];
+        const ogImage = document.querySelector('meta[property="og:image"]')?.getAttribute("content");
+        const title = (design.titleTranslated || design.title || "").replace(/\| MakerWorld$/i, "").trim();
+
+        return {
+          title,
+          modelName: title,
+          imageUrl: ogImage || design.coverLandscape || design.coverPortrait || design.coverUrl || selectedProfile?.cover,
+          printTime: selectedProfile?.printTime,
+          selectedProfileId: selectedId,
+          profiles,
+        };
+      } catch (err) {
+        console.warn("Failed to parse __NEXT_DATA__:", err);
+        return null;
+      }
+    }, requestedProfileId);
+
+    if (nextDataResult && nextDataResult.profiles && nextDataResult.profiles.length > 0) {
+      return nextDataResult;
+    }
 
     // Expand "Load More" for profiles if it exists (German & English support)
     try {

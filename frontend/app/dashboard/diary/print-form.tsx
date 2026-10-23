@@ -86,6 +86,7 @@ export function PrintForm({
     setScrapeError(false);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const scrapeEndpoint = backendUrl ? `${backendUrl}/scrape` : "/api/scrape";
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
@@ -94,10 +95,12 @@ export function PrintForm({
         headers["ngrok-skip-browser-warning"] = "true";
       }
 
-      headers["Authorization"] =
-        `Bearer ${process.env.NEXT_PUBLIC_BACKEND_TOKEN}`;
+      if (process.env.NEXT_PUBLIC_BACKEND_TOKEN) {
+        headers["Authorization"] =
+          `Bearer ${process.env.NEXT_PUBLIC_BACKEND_TOKEN}`;
+      }
 
-      const res = await fetch(`${backendUrl}/scrape`, {
+      const res = await fetch(scrapeEndpoint, {
         method: "POST",
         headers,
         body: JSON.stringify({ url: makerworldLink }),

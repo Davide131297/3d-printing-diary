@@ -14,6 +14,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { Toaster } from "sonner";
+
 export const metadata: Metadata = {
   title: "3D Druck Tagebuch",
   description:
@@ -35,6 +37,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <Toaster position="top-right" richColors theme="dark" />
         <AuthListener />
         <Analytics />
       </body>

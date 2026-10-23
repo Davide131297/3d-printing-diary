@@ -1,10 +1,12 @@
 import LoginModal from "@/components/auth/login-modal";
-import { Printer, Box, Layers, Activity } from "lucide-react";
+import { Printer, Box, Layers, Activity, Calculator } from "lucide-react";
 import { LogoutAlert } from "@/components/logout-alert";
 import exampleChoosePrinter from "@/assets/images/example-choose-printer.png";
 import exampleDiaryCardView from "@/assets/images/example-diary-card-view.png";
 import exampleFilamentStorage from "@/assets/images/example-filament-storage.png";
 import { ParallaxImage } from "@/components/ui/parallax-image";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default async function Home(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -53,11 +55,26 @@ export default async function Home(props: {
                 <span>{"// FILAMENT"}</span>
                 <span>{"// DRUCKER"}</span>
                 <span>{"// PROJEKTE"}</span>
+                <span>{"// RECHNER"}</span>
               </span>
             </p>
 
             <div className="flex flex-wrap gap-4 pt-2">
               <LoginModal />
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-7 text-base rounded-sm border-white/20 bg-white/5 hover:bg-white/10 hover:border-primary/50 text-foreground transition-all duration-300 backdrop-blur-sm group"
+                asChild
+              >
+                <Link href="/calculator">
+                  <Calculator className="mr-2 h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                  <span>Filament-Rechner</span>
+                  <span className="ml-2 text-xs text-muted-foreground uppercase tracking-wider font-mono bg-primary/10 border border-primary/20 text-primary px-1.5 py-0.5 rounded">
+                    Ohne Login
+                  </span>
+                </Link>
+              </Button>
             </div>
           </div>
 

@@ -83,6 +83,36 @@ export interface DbDocument {
   embedding: number[];
 }
 
+export interface DbSavedCalculationItem {
+  id: string;
+  url: string;
+  title: string;
+  imageUrl?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  profiles: any[];
+  selectedProfileId: string;
+  quantity: number;
+}
+
+export interface DbSavedCalculationColor {
+  color: string;
+  name: string;
+  material: string;
+  amount: number;
+  percentage: number;
+}
+
+export interface DbSavedCalculation {
+  id: string;
+  user_id: string;
+  name: string;
+  items: DbSavedCalculationItem[];
+  total_weight_g: number;
+  total_time_mins: number;
+  colors: DbSavedCalculationColor[];
+  created_at: string;
+}
+
 /* ================= PRINTERS ================= */
 
 export async function getPrinters(userId: string): Promise<Printer[]> {
@@ -494,4 +524,69 @@ export async function ingestUserDocuments(
 
   await db.collection<DbDocument>("documents").insertMany(docsToInsert);
   return docsToInsert.length;
+}
+
+/* ================= SAVED CALCULATIONS ================= */
+
+export async function getSavedCalculations(
+  userId: string,
+): Promise<DbSavedCalculation[]> {
+  const db = await getDb();
+  const docs = await db
+    .collection<DbSavedCalculation>("saved_calculations")
+    .find({ user_id: userId })
+    .sort({ created_at: -1 })
+    .toArray();
+
+  return docs.map((doc) => ({
+    id: doc.id,
+    user_id: doc.user_id,
+    name: doc.name,
+    items: doc.items || [],
+    total_weight_g: doc.total_weight_g || 0,
+    total_time_mins: doc.total_time_mins || 0,
+    colors: doc.colors || [],
+    created_at: doc.created_at,
+  }));
+}
+
+export async function saveCalculation(
+  userId: string,
+  calc: {
+    name?: string;
+    items: DbSavedCalculationItem[];
+    total_weight_g: number;
+    total_time_mins: number;
+    colors: DbSavedCalculationColor[];
+  },
+): Promise<DbSavedCalculation> {
+  const db = await getDb();
+  const newCalc: DbSavedCalculation = {
+    id: crypto.randomUUID(),
+    user_id: userId,
+    name:
+      calc.name?.trim() ||
+      `Kalkulation vom ${new Date().toLocaleDateString("de-DE")}`,
+    items: calc.items,
+    total_weight_g: calc.total_weight_g,
+    total_time_mins: calc.total_time_mins,
+    colors: calc.colors,
+    created_at: new Date().toISOString(),
+  };
+
+  await db
+    .collection<DbSavedCalculation>("saved_calculations")
+    .insertOne(newCalc);
+  return newCalc;
+}
+
+export async function deleteSavedCalculation(
+  userId: string,
+  calcId: string,
+): Promise<boolean> {
+  const db = await getDb();
+  const result = await db
+    .collection<DbSavedCalculation>("saved_calculations")
+    .deleteOne({ id: calcId, user_id: userId });
+  return result.deletedCount > 0;
 }

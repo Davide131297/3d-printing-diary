@@ -3,10 +3,21 @@
 import * as cheerio from "cheerio";
 
 // Define the scraper response type
+export type FilamentWeight = {
+  amount: number;
+  color: string;
+  material?: string;
+  usedM?: string;
+};
+
 export type PrintProfile = {
+  id?: string;
   name: string;
   printTime?: number;
-  filamentWeights?: { amount: number; color: string }[];
+  weight?: number;
+  cover?: string;
+  isDefault?: boolean;
+  filamentWeights?: FilamentWeight[];
 };
 
 export type ScrapedData = {
@@ -14,6 +25,7 @@ export type ScrapedData = {
   modelName?: string;
   imageUrl?: string;
   printTime?: number; // in minutes
+  selectedProfileId?: string;
   profiles?: PrintProfile[];
 };
 
@@ -79,10 +91,86 @@ export async function scrapeMakerWorld(
     // Make window appear normal size
     await page.setViewport({ width: 1920, height: 1080 });
 
-    // Go to the URL and wait for network to be idle
+    // Parse profile ID from URL hash if provided (e.g. #profileId-723803)
+    const hashMatch = url.match(/profileId-(\d+)/i) || url.match(/#(\d+)/);
+    const requestedProfileId = hashMatch ? hashMatch[1] : undefined;
+
+    // Go to the URL
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15000 });
 
-    // Slight delay to ensure hydration
+    // Try fast extraction from __NEXT_DATA__
+    const nextDataResult = await page.evaluate((reqProfileId: string | undefined) => {
+      const el = document.getElementById("__NEXT_DATA__");
+      if (!el) return null;
+      try {
+        const json = JSON.parse(el.textContent || "{}");
+        const design = json.props?.pageProps?.design;
+        if (!design) return null;
+
+        const instances = design.instances || [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const profiles = instances.map((inst: any) => {
+          const rawFilaments = inst.instanceFilaments || [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const filamentWeights = rawFilaments.map((f: any) => {
+            let col = f.color || "#CCCCCC";
+            if (!col.startsWith("#") && /^[0-9A-Fa-f]{6}$/.test(col)) {
+              col = "#" + col;
+            }
+            return {
+              amount: parseFloat(f.usedG) || 0,
+              color: col.toUpperCase(),
+              material: f.type || "PLA",
+              usedM: f.usedM ? String(f.usedM) : undefined,
+            };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          }).filter((f: any) => f.amount > 0);
+
+          return {
+            id: String(inst.id),
+            name: inst.titleTranslated || inst.title || `Profil ${inst.id}`,
+            printTime: inst.prediction ? Math.round(inst.prediction / 60) : undefined,
+            weight: typeof inst.weight === "number" ? inst.weight : undefined,
+            cover: inst.cover || undefined,
+            isDefault: !!inst.isDefault,
+            filamentWeights,
+          };
+        });
+
+        // Determine which profile is selected
+        let selectedId = reqProfileId && profiles.some((p: { id: string }) => p.id === reqProfileId)
+          ? reqProfileId
+          : undefined;
+
+        if (!selectedId) {
+          const def = profiles.find((p: { isDefault?: boolean }) => p.isDefault);
+          selectedId = def ? def.id : profiles[0]?.id;
+        }
+
+        const selectedProfile = profiles.find((p: { id: string }) => p.id === selectedId) || profiles[0];
+
+        const ogImage = document.querySelector('meta[property="og:image"]')?.getAttribute("content");
+        const title = (design.titleTranslated || design.title || "").replace(/\| MakerWorld$/i, "").trim();
+
+        return {
+          title,
+          modelName: title,
+          imageUrl: ogImage || design.coverLandscape || design.coverPortrait || design.coverUrl || selectedProfile?.cover,
+          printTime: selectedProfile?.printTime,
+          selectedProfileId: selectedId,
+          profiles,
+        };
+      } catch (err) {
+        console.warn("Failed to parse __NEXT_DATA__:", err);
+        return null;
+      }
+    }, requestedProfileId);
+
+    if (nextDataResult && nextDataResult.profiles && nextDataResult.profiles.length > 0) {
+      return nextDataResult;
+    }
+
+    // Fallback: Slight delay to ensure hydration for DOM scraping
     await new Promise((r) => setTimeout(r, 2000));
 
     // Expand "Load More" for profiles if it exists (German & English support)
@@ -186,6 +274,11 @@ export async function scrapeMakerWorld(
         // Logic: .config_title is inside .mw-css-18c9i04 which is inside .mw-css-1x66f0r which is sibling to .mw-css-dtg2nl (which contains .time)
         // Or we just look for the closest common wrapper.
         // We can just query for .time relative to the handle's container.
+
+        // Check if element is visible
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const isVisible = await titleHandle.evaluate((el: any) => el.offsetParent !== null);
+        if (!isVisible) continue;
 
         // Let's rely on hovering the titleHandle or its parent to trigger the popover
         await titleHandle.hover();
