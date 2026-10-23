@@ -64,7 +64,7 @@ export async function scrapeMakerWorld(url: string): Promise<ScrapedData | null>
 
     // Set a consistent User-Agent
     await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
     );
 
     // Make window appear normal size
@@ -75,7 +75,19 @@ export async function scrapeMakerWorld(url: string): Promise<ScrapedData | null>
     const requestedProfileId = hashMatch ? hashMatch[1] : undefined;
 
     // Go to the URL
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
+    const response = await page.goto(url, {
+      waitUntil: "domcontentloaded",
+      timeout: 20000,
+    });
+
+    // Cloudflare may serve a challenge first; give it time to resolve
+    try {
+      await page.waitForSelector("#__NEXT_DATA__", { timeout: 15000 });
+    } catch {
+      console.warn(
+        `MakerWorld page not ready: status=${response?.status()} title="${await page.title()}"`,
+      );
+    }
 
     // Try fast extraction from __NEXT_DATA__
     const nextDataResult = await page.evaluate((reqProfileId) => {
@@ -324,6 +336,13 @@ export async function scrapeMakerWorld(url: string): Promise<ScrapedData | null>
       } catch (err) {
         console.warn("Error processing a profile handle", err);
       }
+    }
+
+    if (!title && profiles.length === 0) {
+      console.error(
+        `MakerWorld returned no data (likely bot protection): title="${await page.title()}"`,
+      );
+      return null;
     }
 
     return {
